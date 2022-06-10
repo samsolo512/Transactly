@@ -1,0 +1,523 @@
+[33mcommit 4ced228124548fd9f791e174f176f4df0be2395f[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: samsolo512 <samsolo@gmail.com>
+Date:   Fri Apr 8 01:13:46 2022 -0600
+
+    rename files and reorg
+
+[1mdiff --git a/.idea/sqldialects.xml b/.idea/sqldialects.xml[m
+[1mindex 655b2d2..c687365 100644[m
+[1m--- a/.idea/sqldialects.xml[m
+[1m+++ b/.idea/sqldialects.xml[m
+[36m@@ -2,7 +2,7 @@[m
+ <project version="4">[m
+   <component name="SqlDialectMappings">[m
+     <file url="file://$PROJECT_DIR$/GCP/util_create_schema.sql" dialect="BigQuery" />[m
+[31m-    <file url="file://$PROJECT_DIR$/Snowflake/dim_contract.sql" dialect="Snowflake" />[m
+[32m+[m[32m    <file url="file://$PROJECT_DIR$/Snowflake/dims and facts/dim_contract.sql" dialect="Snowflake" />[m
+     <file url="PROJECT" dialect="Snowflake" />[m
+   </component>[m
+ </project>[m
+\ No newline at end of file[m
+[1mdiff --git a/Power BI Workbooks/fact_order_line_item2.pbix b/Power BI Workbooks/fact_order_line_item2.pbix[m
+[1mnew file mode 100644[m
+[1mindex 0000000..a6880d5[m
+Binary files /dev/null and b/Power BI Workbooks/fact_order_line_item2.pbix differ
+[1mdiff --git a/Snowflake/dim_listings.sql b/Snowflake/dim_listings.sql[m
+[1mdeleted file mode 100644[m
+[1mindex 69be4e1..0000000[m
+[1m--- a/Snowflake/dim_listings.sql[m
+[1m+++ /dev/null[m
+[36m@@ -1,190 +0,0 @@[m
+[31m-select count(1) from listings;[m
+[31m-[m
+[31m-[m
+[31m--- Type 2 SCD per Kimball Design Tip 107[m
+[31m--- (https://www.kimballgroup.com/2008/11/design-tip-107-using-the-sql-merge-statement-for-slowly-changing-dimension-processing/)[m
+[31m-insert into dim_listings  -- select * from dim_listings[m
+[31m-select[m
+[31m-    id[m
+[31m-    ,bathroomsfull[m
+[31m-    ,streetdirprefix[m
+[31m-    ,current_flag[m
+[31m-    ,eff_date[m
+[31m-    ,end_date[m
+[31m-    ,current_timestamp() as load_date[m
+[31m-    ,current_timestamp() as update_date[m
+[31m-from([m
+[31m-    merge into dim_listings as target[m
+[31m-    using([m
+[31m-        select top 10 *[m
+[31m-        from FIVETRAN.PRODUCTION_MLSFARM2_PUBLIC.LISTINGS[m
+[31m-        where _fivetran_deleted = 'FALSE'[m
+[31m-    ) as source[m
+[31m-        on target.id = source.id[m
+[31m-[m
+[31m-    -- update a record's end date and to being not active if a record with the same id is found with a changed field[m
+[31m-    when matched[m
+[31m-        and current_flag = 'y'[m
+[31m-        and([m
+[31m-            ifnull(target.bathroomsfull, '1') <> ifnull(source.bathroomsfull, '1')[m
+[31m-            or ifnull(target.streetdirprefix, '1') <> ifnull(source.streetdirprefix, '1')[m
+[31m-        )[m
+[31m-        then update set[m
+[31m-            current_flag = 'n'[m
+[31m-            ,end_date = current_date()-2[m
+[31m-[m
+[31m-    -- insert brand new record if it didn't exist before and make it the active one[m
+[31m-    when not matched then[m
+[31m-        insert(id, current_flag, eff_date, end_date, bathroomsfull, streetdirprefix, load_date, update_date)[m
+[31m-        values(id, 'y', current_date()-1, '12/31/2199', bathroomsfull, streetdirprefix, current_date(), current_date())[m
+[31m-[m
+[31m-    output[m
+[31m-        $action as action_out[m
+[31m-        ,id[m
+[31m-        ,'y' as current_flag[m
+[31m-        ,current_date()-1 as eff_date[m
+[31m-        ,'12/31/2199' as end_date[m
+[31m-        ,bathroomsfull[m
+[31m-        ,streetdirprefix[m
+[31m-) as merge_out[m
+[31m-where merge_out.action_out = 'UPDATE'[m
+[31m-;[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m-create or replace table dim_listings([m
+[31m-    id varchar[m
+[31m-    ,bathroomsfull int[m
+[31m-    ,streetdirprefix varchar[m
+[31m-    ,current_flag varchar[m
+[31m-    ,start_time datetime[m
+[31m-    ,end_time datetime[m
+[31m-    ,update_date datetime[m
+[31m-)[m
+[31m-;[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m--- type 2 SCD using Snowflake Streams[m
+[31m--- (https://community.snowflake.com/s/article/Building-a-Type-2-Slowly-Changing-Dimension-in-Snowflake-Using-Streams-and-Tasks-Part-1)[m
+[31m-[m
+[31m--- create stream[m
+[31m-create or replace stream working.stream_listings_changes on table FIVETRAN.PRODUCTION_MLSFARM2_PUBLIC.listings;[m
+[31m-[m
+[31m-use schema working;[m
+[31m-show streams;[m
+[31m-select * from working.stream_listings_changes;[m
+[31m-use schema dimensional;[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m-select * from working.vw_listings_changes;[m
+[31m-[m
+[31m-insert into FIVETRAN.PRODUCTION_MLSFARM2_PUBLIC.listings[m
+[31m-    (id, bathroomsfull, streetdirprefix, _fivetran_synced)[m
+[31m-    values(0, 10, 'R', '1/1/2021')[m
+[31m-;[m
+[31m-[m
+[31m-[m
+[31m--- create stream view[m
+[31m-create or replace view working.vw_listings_changes as[m
+[31m-[m
+[31m-    -- insert[m
+[31m-    select[m
+[31m-        id[m
+[31m-        ,bathroomsfull[m
+[31m-        ,streetdirprefix[m
+[31m-        ,current_flag[m
+[31m-        ,start_time[m
+[31m-        ,end_time[m
+[31m-        ,'I' as dml_type[m
+[31m-    from([m
+[31m-        select[m
+[31m-            *[m
+[31m-            ,_fivetran_synced as start_time[m
+[31m-            -- id, bathroomsfull, streetdirprefix, _fivetran_synced as start_date,[m
+[31m-            ,lag(_fivetran_synced) over (partition by id order by _fivetran_synced desc) as end_time_raw,[m
+[31m-            case[m
+[31m-                when end_time_raw is null then '9999-12-31'::timestamp_ntz[m
+[31m-                else end_time_raw[m
+[31m-                end as end_time,[m
+[31m-            case[m
+[31m-                when end_time_raw is null then 1[m
+[31m-                else 0[m
+[31m-                end as current_flag[m
+[31m-        from ([m
+[31m-            select *  -- id, bathroomsfull, streetdirprefix, _fivetran_synced[m
+[31m-            from working.stream_listings_changes[m
+[31m-            where[m
+[31m-                metadata$action = 'INSERT'[m
+[31m-                and metadata$isupdate = 'FALSE'[m
+[31m-        )[m
+[31m-    )[m
+[31m-[m
+[31m-    -- update[m
+[31m-    union[m
+[31m-    select[m
+[31m-        id[m
+[31m-        ,bathroomsfull[m
+[31m-        ,streetdirprefix[m
+[31m-        ,current_flag[m
+[31m-        ,start_time[m
+[31m-        ,end_time[m
+[31m-        ,dml_type[m
+[31m-    from([m
+[31m-        select[m
+[31m-            id, bathroomsfull, streetdirprefix, _fivetran_synced as start_time,[m
+[31m-            lag(_fivetran_synced) over (partition by id order by _fivetran_synced desc) as end_time_raw,[m
+[31m-            case[m
+[31m-                when end_time_raw is null then '9999-12-31'::timestamp_ntz[m
+[31m-                else end_time_raw[m
+[31m-                end as end_time,[m
+[31m-            case[m
+[31m-                when end_time_raw is null then 1[m
+[31m-                else 0[m
+[31m-                end as current_flag,[m
+[31m-            dml_type[m
+[31m-        from ([m
+[31m-            -- Identify data to insert into dim_listings table[m
+[31m-            select id, bathroomsfull, streetdirprefix, _fivetran_synced, 'I' as dml_type[m
+[31m-            from working.stream_listings_changes[m
+[31m-            where[m
+[31m-                metadata$action = 'INSERT'[m
+[31m-                and metadata$isupdate = 'TRUE'[m
+[31m-[m
+[31m-            union[m
+[31m-            -- Identify data in dim_listings table that needs to be updated[m
+[31m-            select id, null, null, start_time, 'U' as dml_type[m
+[31m-            from dimensional.dim_listings[m
+[31m-            where[m
+[31m-                id in([m
+[31m-                    select distinct id[m
+[31m-                    from working.stream_listings_changes[m
+[31m-                    where[m
+[31m-                        metadata$action = 'INSERT'[m
+[31m-                        and metadata$isupdate = 'TRUE'[m
+[31m-                )[m
+[31m-                and current_flag = 1[m
+[31m-        )[m
+[31m-    )[m
+[31m-[m
+[31m-    -- delete[m
+[31m-    union[m
+[31m-    select[m
+[31m-        dl.id[m
+[31m-        ,null[m
+[31m-        ,null[m
+[31m-        ,null[m
+[31m-        ,start_time[m
+[31m-        ,null[m
+[31m-        ,'D'[m
+[31m-    from[m
+[31m-        dimensional.dim_listings dl[m
+[31m-        join working.stream_listings_changes nms on dl.id = nms.id[m
+[31m-    where[m
+[31m-        nms.metadata$action = 'DELETE'[m
+[31m-        and nms.metadata$isupdate = 'FALSE'[m
+[31m-        and dl.current_flag = 1[m
+[31m-;[m
+\ No newline at end of file[m
+[1mdiff --git a/Snowflake/dim_contract.sql b/Snowflake/dims and facts/dim_contract.sql[m
+[1msimilarity index 95%[m
+[1mrename from Snowflake/dim_contract.sql[m
+[1mrename to Snowflake/dims and facts/dim_contract.sql[m
+[1mindex 8baa1de..9a8ea6c 100644[m
+[1m--- a/Snowflake/dim_contract.sql[m
+[1m+++ b/Snowflake/dims and facts/dim_contract.sql[m	
+[36m@@ -1,3 +1,12 @@[m
+[32m+[m[32m-- dim_contract[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32muse prod.dimensional;[m
+[32m+[m[32muse stage.dimensional;[m
+[32m+[m[32muse dev.dimensional;[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m
+ merge into dim_contract target[m
+ using([m
+ [m
+[1mdiff --git a/Snowflake/dim_date.sql b/Snowflake/dims and facts/dim_date.sql[m
+[1msimilarity index 90%[m
+[1mrename from Snowflake/dim_date.sql[m
+[1mrename to Snowflake/dims and facts/dim_date.sql[m
+[1mindex 411511e..69eca0b 100644[m
+[1m--- a/Snowflake/dim_date.sql[m
+[1m+++ b/Snowflake/dims and facts/dim_date.sql[m	
+[36m@@ -1,10 +1,17 @@[m
+ --dim_date[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32muse prod.dimensional;[m
+[32m+[m[32muse stage.dimensional;[m
+[32m+[m[32muse dev.dimensional;[m
+[32m+[m[32m*/[m
+[32m+[m
+[32m+[m[32minsert into dim_date[m
+ with cte_my_date AS ([m
+     select dateadd(day, seq4(), '2016-01-01') AS date_id[m
+     from table(generator(rowcount => 10000))  -- Number of days after reference date in previous line[m
+ )[m
+[31m-insert into dim_date[m
+[31m-select [m
+[32m+[m[32mselect[m
+       to_char(concat(year(date_id), '-', month(date_id), '-', day(date_id))::date, 'yyyymmdd') as date_pk[m
+       ,date_id[m
+       ,year(date_id) as year[m
+[36m@@ -26,4 +33,6 @@[m [munion select[m
+     ,dayofweek(to_date('1900-01-01')) as day_of_week[m
+     ,weekofyear(to_date('1900-01-01')) as week_of_year[m
+     ,dayofyear(to_date('1900-01-01')) as day_of_year[m
+[31m-;[m
+\ No newline at end of file[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m[32mselect * from dim_date;[m
+\ No newline at end of file[m
+[1mdiff --git a/Snowflake/dim_line_item.sql b/Snowflake/dims and facts/dim_line_item.sql[m
+[1msimilarity index 93%[m
+[1mrename from Snowflake/dim_line_item.sql[m
+[1mrename to Snowflake/dims and facts/dim_line_item.sql[m
+[1mindex 51da60c..fd3a6ae 100644[m
+[1m--- a/Snowflake/dim_line_item.sql[m
+[1m+++ b/Snowflake/dims and facts/dim_line_item.sql[m	
+[36m@@ -1,4 +1,12 @@[m
+ --dim_line_item[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32muse prod.dimensional;[m
+[32m+[m[32muse stage.dimensional;[m
+[32m+[m[32muse dev.dimensional;[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m
+ merge into dim_line_item as target[m
+ using([m
+     select[m
+[1mdiff --git a/Snowflake/dims and facts/dim_listings.sql b/Snowflake/dims and facts/dim_listings.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..43dc0a6[m
+[1m--- /dev/null[m
+[1m+++ b/Snowflake/dims and facts/dim_listings.sql[m	
+[36m@@ -0,0 +1,527 @@[m
+[32m+[m[32m-- dim_listings[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32muse prod.dimensional;[m
+[32m+[m[32muse stage.dimensional;[m
+[32m+[m[32muse dev.dimensional;[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m[32m------------------------------------------------------------------------------------------------------------------------[m
+[32m+[m[32m-- sample table[m
+[32m+[m
+[32m+[m[32m-- prepare sample table:[m
+[32m+[m[32m-- working.temp_stage_listings[m
+[32m+[m
+[32m+[m[32mcreate table working.temp_stage_listings as[m
+[32m+[m[32mselect top 10 id, bathroomsfull, streetdirprefix, streetname from fivetran.production_mlsfarm2_public.listings[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m[32mselect * from working.temp_stage_listings;[m
+[32m+[m
+[32m+[m[32minsert into working.temp_stage_listings[m
+[32m+[m[32m    (id, bathroomsfull, streetdirprefix, streetname)[m
+[32m+[m[32m    values('9e22415b-c08b-4433-b8d3-62da3713ad3w', 3, 'w', 'kilmington')[m
+[32m+[m[32m;[m
+[32m+[m[32m-- delete from working.temp_stage_listings where id = '9e22415b-c08b-4433-b8d3-62da3713ad3w';[m
+[32m+[m
+[32m+[m[32mupdate working.temp_stage_listings[m
+[32m+[m[32mset bathroomsfull = 20[m
+[32m+[m[32mwhere id = '9e22415b-c08b-4433-b8d3-62da3713ad3f'[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m-- dim_listings[m
+[32m+[m[32mcreate or replace table dim_listings([m
+[32m+[m[32m    id varchar[m
+[32m+[m[32m    ,bathroomsfull int[m
+[32m+[m[32m    ,streetdirprefix varchar[m
+[32m+[m[32m    ,streetname varchar[m
+[32m+[m[32m    ,current_record_flag varchar[m
+[32m+[m
+[32m+[m[32m    ,start_time datetime[m
+[32m+[m[32m    ,end_time datetime[m
+[32m+[m[32m    ,tablehash varchar[m
+[32m+[m[32m    ,update_date datetime[m
+[32m+[m[32m)[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m
+[32m+[m[32mselect * from dim_listings order by id;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m------------------------------------------------------------------------------------------------------------------------[m
+[32m+[m
+[32m+[m[32m-- merge[m
+[32m+[m[32mmerge into dim_listings target[m
+[32m+[m[32musing([m
+[32m+[m
+[32m+[m[32m    select[m
+[32m+[m[32m        l.*[m
+[32m+[m[32m        ,hash(*) as tablehash[m
+[32m+[m[32m    from working.temp_stage_listings l[m
+[32m+[m
+[32m+[m[32m) as source[m
+[32m+[m[32m    on target.id = source.id[m
+[32m+[m[32m    and target.tablehash = source.tablehash[m
+[32m+[m
+[32m+[m[32mwhen not matched then[m
+[32m+[m[32m    insert(id, bathroomsfull, streetdirprefix, streetname, current_record_flag, start_time, end_time, tablehash, update_date)[m
+[32m+[m[32m    values(source.id, source.bathroomsfull, source.streetdirprefix, source.streetname, 1, current_timestamp(0), '9999-12-31', source.tablehash, current_timestamp(0))[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m-- update rows that are no longer active[m
+[32m+[m[32mupdate dim_listings l[m
+[32m+[m[32mset[m
+[32m+[m[32m    l.current_record_flag = cast(w.new_flag as int)[m
+[32m+[m[32m    ,l.end_time = w.new_end_time[m
+[32m+[m[32mfrom([m
+[32m+[m[32m    select[m
+[32m+[m[32m        id[m
+[32m+[m[32m        ,start_time[m
+[32m+[m[32m        ,tablehash[m
+[32m+[m[32m        ,case[m
+[32m+[m[32m            when lead(start_time) over (partition by id order by start_time) is not null[m
+[32m+[m[32m            then 0[m
+[32m+[m[32m            else current_record_flag[m
+[32m+[m[32m            end as new_flag[m
+[32m+[m[32m        ,case[m
+[32m+[m[32m            when lead(start_time) over (partition by id order by start_time) is not null[m
+[32m+[m[32m            then dateadd(second, -1, lead(start_time) over (partition by id order by start_time))[m
+[32m+[m[32m            else end_time[m
+[32m+[m[32m            end as new_end_time[m
+[32m+[m[32m    from dim_listings[m
+[32m+[m[32m) w[m
+[32m+[m[32mwhere[m
+[32m+[m[32m    l.id = w.id[m
+[32m+[m[32m    and l.tablehash = w.tablehash[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m------------------------------------------------------------------------------------------------------------------------[m
+[32m+[m[32m-- real table[m
+[32m+[m
+[32m+[m[32m-- dim_listings[m
+[32m+[m[32mcreate or replace table dim_listings([m
+[32m+[m[32m    id varchar not null primary key,[m
+[32m+[m[32m    bathroomsfull int,[m
+[32m+[m[32m    streetdirprefix varchar,[m
+[32m+[m[32m    streetname varchar,[m
+[32m+[m
+[32m+[m	[32mLOTSIZEACRES VARCHAR,[m
+[32m+[m	[32mOFFMARKETDATE DATE,[m
+[32m+[m	[32mBEDROOMSTOTAL VARCHAR,[m
+[32m+[m	[32mENDINGDATE DATE,[m
+[32m+[m	[32mCALCULATED_DATE_ON DATE,[m
+[32m+[m	[32mLISTAGENT_ID VARCHAR,[m
+[32m+[m	[32mORIGINATINGSYSTEMKEY VARCHAR,[m
+[32m+[m	[32mCOUNTYORPARISH VARCHAR,[m
+[32m+[m	[32mLATITUDE VARCHAR,[m
+[32m+[m	[32mSOURCE VARCHAR,[m
+[32m+[m	[32mPROPERTYTYPE VARCHAR,[m
+[32m+[m	[32mLISTPRICE VARCHAR,[m
+[32m+[m	[32mUA NUMBER,[m
+[32m+[m	[32mSTREETSUFFIX VARCHAR,[m
+[32m+[m	[32mCLOSEDATE DATE,[m
+[32m+[m	[32mMULTI BOOLEAN,[m
+[32m+[m	[32mORIGINATINGSYSTEMNAME VARCHAR,[m
+[32m+[m	[32mCOBUYEROFFICE_ID VARCHAR,[m
+[32m+[m	[32mONMARKETDATE DATE,[m
+[32m+[m	[32mCONTRACTSTATUSCHANGEDATE DATE,[m
+[32m+[m	[32mMAJORCHANGETIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mLISTINGID VARCHAR,[m
+[32m+[m	[32mSTREETNUMBER VARCHAR,[m
+[32m+[m	[32mACTIVATIONDATE DATE,[m
+[32m+[m	[32mMODIFICATIONTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mYEARBUILT VARCHAR,[m
+[32m+[m	[32mLISTINGKEY VARCHAR,[m
+[32m+[m	[32mROOMSTOTAL VARCHAR,[m
+[32m+[m	[32mGARAGEYN VARCHAR,[m
+[32m+[m	[32mBUYERAGENT_ID VARCHAR,[m
+[32m+[m	[32mSTATEORPROVINCE VARCHAR,[m
+[32m+[m[32m-- 	MEDIA VARIANT,[m
+[32m+[m	[32mCITY VARCHAR,[m
+[32m+[m	[32mSOURCESYSTEMID VARCHAR,[m
+[32m+[m	[32mCOLISTAGENT_ID VARCHAR,[m
+[32m+[m	[32mORIGINATINGSYSTEMID VARCHAR,[m
+[32m+[m	[32mLONGITUDE VARCHAR,[m
+[32m+[m	[32mSTATUSCHANGETIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mMEDIAPRESENT BOOLEAN,[m
+[32m+[m	[32mBUYERAGENCYCOMPENSATION VARCHAR,[m
+[32m+[m[32m-- 	PROPERTYUNITS VARIANT,[m
+[32m+[m	[32mCOUNTRY VARCHAR,[m
+[32m+[m	[32mCOBUYERAGENT_ID VARCHAR,[m
+[32m+[m	[32mSOURCESYSTEMKEY VARCHAR,[m
+[32m+[m	[32mORIGINALENTRYTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mLISTOFFICE_ID VARCHAR,[m
+[32m+[m	[32mPOSTALCODE VARCHAR,[m
+[32m+[m	[32mCREATED_AT TIMESTAMPTZ,[m
+[32m+[m	[32mONMARKETTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mCLOSEPRICE VARCHAR,[m
+[32m+[m	[32mSTANDARDSTATUS VARCHAR,[m
+[32m+[m	[32mORIGINATINGSYSTEMMODIFICATIONTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mPHOTOSFETCHED BOOLEAN,[m
+[32m+[m	[32mUPDATED_AT TIMESTAMPTZ,[m
+[32m+[m	[32mPENDINGTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mNUMBEROFUNITSTOTAL VARCHAR,[m
+[32m+[m	[32mSTORIES VARCHAR,[m
+[32m+[m	[32mOFFMARKETTIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mPARCELNUMBER VARCHAR,[m
+[32m+[m	[32mPURCHASECONTRACTDATE DATE,[m
+[32m+[m	[32mCA NUMBER,[m
+[32m+[m[32m-- 	REST VARIANT,[m
+[32m+[m	[32mLIVINGAREA VARCHAR,[m
+[32m+[m	[32mPRICECHANGETIMESTAMP TIMESTAMPTZ,[m
+[32m+[m	[32mLISTINGCONTRACTDATE DATE,[m
+[32m+[m	[32mCUMULATIVEDAYSONMARKET VARCHAR,[m
+[32m+[m	[32mI1 BOOLEAN,[m
+[32m+[m	[32mARCHITECTURALSTYLE VARCHAR,[m
+[32m+[m	[32mCOLISTOFFICE_ID VARCHAR,[m
+[32m+[m	[32mPARKINGFEATURES VARCHAR,[m
+[32m+[m	[32mBATHROOMSHALF VARCHAR,[m
+[32m+[m[32m-- 	PROPERTYUNITTYPES VARIANT,[m
+[32m+[m	[32mPROPERTYSUBTYPE VARCHAR,[m
+[32m+[m	[32mLOTSIZEAREA VARCHAR,[m
+[32m+[m	[32mSEWER VARCHAR,[m
+[32m+[m	[32mEXPIRATIONDATE DATE,[m
+[32m+[m	[32mCURRENTPRICE VARCHAR,[m
+[32m+[m	[32mPOSSESSION VARCHAR,[m
+[32m+[m	[32mHEATING VARCHAR,[m
+[32m+[m	[32mMEDIAPROCESS NUMBER,[m
+[32m+[m	[32mBUYEROFFICE_ID VARCHAR,[m
+[32m+[m
+[32m+[m[32m    current_record_flag int,[m
+[32m+[m[32m    start_time datetime,[m
+[32m+[m[32m    end_time datetime,[m
+[32m+[m[32m    tablehash varchar,[m
+[32m+[m[32m    update_date datetime[m
+[32m+[m[32m)[m
+[32m+[m[32m;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m-- merge[m
+[32m+[m[32mmerge into dim_listings target[m
+[32m+[m[32musing([m
+[32m+[m
+[32m+[m[32m    select[m
+[32m+[m[32m        l.*[m
+[32m+[m[32m        ,hash([m
+[32m+[m[32m            id,[m
+[32m+[m[32m            bathroomsfull,[m
+[32m+[m[32m            streetdirprefix,[m
+[32m+[m[32m            streetname,[m
+[32m+[m[32m            LOTSIZEACRES,[m
+[32m+[m[32m            OFFMARKETDATE,[m
+[32m+[m[32m            BEDROOMSTOTAL,[m
+[32m+[m[32m            ENDINGDATE,[m
+[32m+[m[32m            CALCULATED_

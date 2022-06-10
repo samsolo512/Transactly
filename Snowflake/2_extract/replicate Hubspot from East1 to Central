@@ -1,0 +1,36 @@
+-- hubspot_extract replication from AWS_US_EAST_1
+
+--------------------------------------------------------------------------------------------------------------------------
+-- setup
+
+-- at target
+show organization accounts;
+select system$global_account_set_parameter('FL27750', 'ENABLE_ACCOUNT_DATABASE_REPLICATION', 'true');
+select system$global_account_set_parameter('UZB04943', 'ENABLE_ACCOUNT_DATABASE_REPLICATION', 'true');
+
+-- at source
+use role accountadmin;
+alter database hubspot_extract enable replication to accounts UHTHYMN.XT11263;
+show replication databases;
+
+-- at target
+use role accountadmin;
+show replication databases;
+create database hubspot_extract as replica of UHTHYMN.TRANSACTLY_AWS_US_EAST_1.hubspot_extract;
+
+-- create roles and permissions
+use role useradmin;
+create role hubspot_extract_owner;
+
+use role securityadmin;
+grant ownership on database hubspot_extract to role hubspot_extract_owner;
+grant role hubspot_extract_owner to role data_engineer;
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+-- refresh
+
+-- at target
+use role data_engineer;
+alter database hubspot_extract refresh;

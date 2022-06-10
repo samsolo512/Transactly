@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/GCP/util_create_schema.sql" dialect="BigQuery" />
+    <file url="file://$PROJECT_DIR$/Snowflake/dims and facts/dim_contract.sql" dialect="Snowflake" />
+    <file url="PROJECT" dialect="Snowflake" />
+  </component>
+</project>
