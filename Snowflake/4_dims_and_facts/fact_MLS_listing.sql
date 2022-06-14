@@ -123,7 +123,7 @@ create or replace table dimensional.fact_listing as
         join dim_listing list on l.mls_key = list.mls_key
         join dim_agent a on a.id = l.listagent_id
         join dim_brokerage b on l.listoffice_id = b.id
-        join dim_date dt on l.calculated_date_on = dt.date_id
+        join dim_date dt on l.listingcontractdate = dt.date_id
     group by list.listing_pk, b.brokerage_pk, a.agent_pk, dt.date_pk
 
 --     group by l.status

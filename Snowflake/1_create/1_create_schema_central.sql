@@ -89,6 +89,8 @@ create role if not exists stage_owner;
 create role if not exists stage_read;
 create role if not exists dev_owner;
 create role if not exists dev_read;
+create role if not exists skyvia_read;
+create role if not exists skyvia_owner;
 
 
 

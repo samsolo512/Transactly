@@ -67,6 +67,8 @@ grant role fivetran_read to role data_engineer;
 grant role account_support to role data_engineer;
 grant role airbyte_role to role data_engineer;
 grant role airbyte_owner to role data_engineer;
+grant role skyvia_read to role data_engineer;
+grant role skyvia_owner to role data_engineer;
 grant usage on warehouse compute_wh to role data_engineer;
 grant usage on warehouse powerbi_wh to role data_engineer;
 grant usage on warehouse tableau_wh to role data_engineer;
@@ -99,13 +101,14 @@ grant role fivetran_read to role admin_read;
 grant role prod_load_read to role admin_read;
 grant role dev_read to role admin_read;
 grant usage on warehouse compute_wh to role admin_read;
+grant role skyvia_read to role admin_read;
 
 
 -- data_analyst
 grant role fivetran_read to role admin_read;
 grant role prod_load_read to role admin_read;
 grant usage on warehouse compute_wh to role admin_read;
-
+grant role skyvia_read to role data_analyst;
 
 
 ----------------------------------------------------------------------------------------------------
@@ -219,3 +222,19 @@ grant ownership on all tables in database hubspot_extract to role hubspot_extrac
 grant ownership on future tables in database hubspot_extract to role hubspot_extract_owner;
 grant ownership on all views in database hubspot_extract to role hubspot_extract_owner;
 grant ownership on future views in database hubspot_extract to role hubspot_extract_owner;
+
+
+-- skyvia_read
+grant usage on database skyvia to role skyvia_read;
+grant usage on all schemas in database skyvia to role skyvia_read;
+grant usage on future schemas in database skyvia to role skyvia_owner;
+grant select on all tables in database skyvia to role skyvia_read;
+grant select on future tables in database skyvia to role skyvia_read;
+
+
+-- skyvia_owner
+grant ownership on database skyvia to role skyvia_owner;
+grant ownership on all schemas in database skyvia to role skyvia_owner revoke current grants;
+grant ownership on future schemas in database skyvia to role skyvia_owner;
+grant ownership on all tables in database skyvia to role skyvia_owner;
+revoke ownership on future tables in database skyvia to role skyvia_owner;
