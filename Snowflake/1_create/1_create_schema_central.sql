@@ -1,11 +1,5 @@
 -- create schema at acct level
 
-/*
-use prod.dimensional;
-use stage.dimensional;
-use dev.dimensional;
- */
-
 use role sysadmin;
 ---------------------------------------------------------------------------------------------------
 -- create warehouses
@@ -62,6 +56,7 @@ create user if not exists sbrown default_role = data_engineer default_warehouse 
 create user if not exists CATHERINEHARRIS default_role = sysadmin default_warehouse = compute_wh default_namespace = prod.load;
 create user if not exists NNIEMEYER default_role = accountadmin default_warehouse = compute_wh default_namespace = prod.load;
 create user if not exists qstrother default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
+create user if not exists jocllado default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
 create user if not exists mclifton default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
 
 

@@ -33,17 +33,19 @@ with
 
 select
     u.id as user_id,
-    o.id as office_id,
-    o.name as office_name,
     u.first_name as first_name,
     u.last_name as last_name,
     u.email as email,
     loc.last_order_created,
     max(li.due_date) as last_order_due,
-    count(0) as total_orders,
     u.created as tier_3,
     min(li.due_date) as tier_2,
-    fifth.due_date as tier_1
+    fifth.due_date as tier_1,
+    -- remove from this dim and rely on brokerage for these fields
+    o.id as office_id,
+    o.name as office_name,
+    -- remove from this dim and add to fact
+    count(0) as total_orders
 from
     fivetran.transactly_app_production_rec_accounts.user u
     join fivetran.transactly_app_production_rec_accounts.line_item li on li.user_id = u.id
@@ -63,17 +65,19 @@ group by u.id, o.id, o.id, u.id, o.name, u.first_name, u.last_name, u.email, loc
 union all
 select
     u.id as user_id,
-    o2.id as office_id,
-    o2.name as office_name,
     u.first_name as first_name,
     u.last_name as last_name,
     u.email as email,
     null as last_order_created,
     null as last_order_due,
-    0 as total_orders,
     u.created as tier_3,
     null as tier_2,
-    null as tier_1
+    null as tier_1,
+    -- remove from this dim and rely on brokerage for these fields
+    o2.id as office_id,
+    o2.name as office_name,
+    -- remove from this dim and add to fact
+    0 as total_orders
 from
     fivetran.transactly_app_production_rec_accounts.user u
     left join fivetran.transactly_app_production_rec_accounts.office_user ou2 on u.id = ou2.user_id

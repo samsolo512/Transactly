@@ -10,13 +10,13 @@ grant role orgadmin to user nniemeyer;
 grant role orgadmin to user accountadmin;
 grant role powerbi_role to user powerbi_svc;
 grant role tableau_role to user tableau_svc;
-grant usage on warehouse PowerBI_WH to role PowerBI_role;
 grant role admin_read to user catherineharris;
 grant role airbyte_role to user airbyte_svc;
+grant role dbt_role to user dbt_svc;
 grant role data_analyst to user qstrother;
 grant role data_analyst to user mclifton;
-grant role dbt_role to user dbt_svc;
-
+grant role data_analyst to user jcollado;
+grant usage on warehouse PowerBI_WH to role PowerBI_role;
 
 
 ----------------------------------------------------------------------------------------------------
