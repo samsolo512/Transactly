@@ -1,4 +1,4 @@
-create or replace view clients_vw as
+create or replace table dimensional.dim_client as
 
 with
     last_order_created as (
@@ -84,4 +84,3 @@ where
     and o.id is null
 order by user_id
 ;
-
