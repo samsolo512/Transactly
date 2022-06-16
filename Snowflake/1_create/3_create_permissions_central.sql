@@ -55,6 +55,7 @@ grant usage on warehouse dbt_wh to role dbt_role;
 -- fivetran_role
 grant role fivetran_owner to role fivetran_role;
 grant usage on warehouse fivetran_wh to role fivetran_role;
+grant role quickbooks_owner to role fivetran_role;
 
 
 -- data_engineer
@@ -99,9 +100,9 @@ grant usage on warehouse powerbi_wh to role PowerBI_role;
 -- admin_read
 grant role fivetran_read to role admin_read;
 grant role prod_load_read to role admin_read;
-grant role dev_read to role admin_read;
 grant usage on warehouse compute_wh to role admin_read;
 grant role skyvia_read to role admin_read;
+grant role quickbooks_read to role admin_read;
 
 
 -- data_analyst
@@ -127,21 +128,45 @@ grant ownership on future tables in database airbyte to role airbyte_owner;
 grant create schema, monitor, usage on database airbyte to role airbyte_owner;
 
 
+-- fivetran_owner and quickbooks_owner should be kept together in this order so that all
+-- access is granted to fivetran_owner, then the quickbooks owner revoke and keeps only quickbooks stuff
 -- fivetran_owner
 grant ownership on database fivetran to role fivetran_owner revoke current grants;
 grant ownership on all schemas in database fivetran to role fivetran_owner revoke current grants;
-grant ownership on future schemas in database fivetran to role fivetran_owner;
 grant ownership on all tables in database fivetran to role fivetran_owner revoke current grants;
 grant ownership on future tables in database fivetran to role fivetran_owner;
 grant create schema, monitor, usage on database fivetran to role fivetran_owner;
 
 
+-- quickbooks_owner
+grant usage on database fivetran to role quickbooks_owner;
+grant ownership on schema fivetran.quickbooks to role quickbooks_owner revoke current grants;
+grant ownership on all tables in schema fivetran.quickbooks to role quickbooks_owner revoke current grants;
+revoke ownership on future tables in schema fivetran.quickbooks from role quickbooks_owner;
+grant ownership on future tables in schema fivetran.quickbooks to role fivetran_owner;
+
+
 -- fivetran_read
 grant usage on database fivetran to role fivetran_read;
-grant usage on all schemas in database fivetran to role fivetran_read;
-grant usage on future schemas in database fivetran to role fivetran_read;
-grant select on all tables in database fivetran to role fivetran_read;
-grant select on future tables in database fivetran to role fivetran_read;
+-- MLS
+grant usage on schema fivetran.production_mlsfarm2_public to role fivetran_read;
+grant select on all tables in schema fivetran.production_mlsfarm2_public to role fivetran_read;
+grant select on future tables in schema fivetran.production_mlsfarm2_public to role fivetran_read;
+-- Salesforce
+grant usage on schema fivetran.salesforce to role fivetran_read;
+grant select on all tables in schema fivetran.salesforce to role fivetran_read;
+grant select on future tables in schema fivetran.salesforce to role fivetran_read;
+-- Transactly
+grant usage on schema fivetran.transactly_app_production_rec_accounts to role fivetran_read;
+grant select on all tables in schema fivetran.transactly_app_production_rec_accounts to role fivetran_read;
+grant select on future tables in schema fivetran to role transactly_app_production_rec_accounts;
+
+
+-- quickbooks_read
+grant usage on database fivetran to role quickbooks_read;
+grant usage on schema fivetran.quickbooks to role quickbooks_read;
+grant select on all tables in schema fivetran.quickbooks to role quickbooks_read;
+grant select on future tables in schema fivetran.quickbooks to role quickbooks_read;
 
 
 -- prod_owner

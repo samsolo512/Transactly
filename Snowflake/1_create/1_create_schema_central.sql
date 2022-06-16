@@ -85,6 +85,8 @@ create role if not exists hubspot_extract_owner;
 create role if not exists prod_owner;
 create role if not exists prod_read;
 create role if not exists prod_load_read;
+create role if not exists quickbooks_owner;
+create role if not exists quickbooks_read;
 create role if not exists stage_owner;
 create role if not exists stage_read;
 create role if not exists dev_owner;
