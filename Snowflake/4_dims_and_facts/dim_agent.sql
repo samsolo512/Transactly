@@ -95,10 +95,9 @@ use dev.dimensional;
 --     using(
 
 
-create or replace table dimensional.dim_agent as
+        create or replace table dimensional.dim_agent as
 
         with
-
             MLS_combined as(
                 select
                     -- unique ids
@@ -172,6 +171,12 @@ create or replace table dimensional.dim_agent as
                     ,tc.last_online_date as tc_last_online_date
                     ,assigned.id as TC_assigned_user_id
                     ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
+                    ,tc.email as tc_email
+                    ,tc.first_login as tc_first_login
+                    ,tc.autopay_date as tc_autopay_date
+                    ,ast.name as tc_membership_type
+                    ,uast.price as membership_price
+                    ,uast.end_date as membership_end_date
 
                 from
                     (select * from fivetran.production_mlsfarm2_public.ags) agt  -- 2.7M rows, key, mlsid are unique identifiers
@@ -179,6 +184,7 @@ create or replace table dimensional.dim_agent as
                     -- this is to limit the number of agents, takes it down to 282k rows
                     join (
                         select distinct
+                            top 1000  -- comment out this line when done testing
                             agt.id
                         from
                             working.listings_current list
@@ -193,32 +199,8 @@ create or replace table dimensional.dim_agent as
                         -- individual combination of name, state, city are similar and zip matches
                         on (
                             jarowinkler_similarity(trim(lower(agt.fullname)), trim(lower(concat(hb.first_name, ' ', hb.last_name)))) >= 90
-        --                     and jarowinkler_similarity(trim(lower(agt.stateorprovince)), trim(lower(hb.state_province))) >= 94
-        --                     and jarowinkler_similarity(trim(lower(agt.city)), trim(lower(hb.city))) >= 94
                             and trim(lower(regexp_replace(agt.postalcode, '[^0-9]'))) = trim(lower(regexp_replace(hb.zip, '[^0-9]')))
                         )
-
-        --                 -- concatenated name, city, state are similar and the zip matches or is null
-        --                 or(
-        --                     jarowinkler_similarity(
-        --                         concat(
-        --                             trim(lower(agt.fullname))
-        --                             ,trim(lower(agt.city))
-        --                             ,trim(lower(agt.stateorprovince))
-        --                         )
-        --                         ,concat(
-        --                             trim(lower(concat(hb.first_name, ' ', hb.last_name)))
-        --                             ,trim(lower(hb.city))
-        --                             ,trim(lower(hb.state_province))
-        --                         )
-        --                     ) >= 95
-        --                     and(
-        --                         jarowinkler_similarity(
-        --                         trim(lower(regexp_replace(agt.postalcode, '[^0-9]'))),
-        --                         trim(lower(regexp_replace(hb.zip, '[^0-9]')))
-        --                         ) = 100
-        --                     )
-        --                 )
 
                         -- emails are similar
                         or jarowinkler_similarity(trim(lower(agt.email)), trim(lower(hb.email))) >= 98
@@ -244,16 +226,25 @@ create or replace table dimensional.dim_agent as
                                     else regexp_replace(hb.mobile_phone_number, '[^0-9]')
                                     end
                             )
-        --                     and(
-        --                         jarowinkler_similarity(
-        --                             trim(lower(regexp_replace(agt.postalcode, '[^0-9]')))
-        --                             ,trim(lower(regexp_replace(hb.zip, '[^0-9]')))
-        --                         ) = 100
-        --                     )
-                        )
+                          )
 
-                    left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user tc on hb.transactly_id = tc.id  -- id is unique identifier
-                    left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user assigned on tc.assigned_transactly_tc_id = assigned.id  -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
+                    left join fivetran.transactly_app_production_rec_accounts.user tc -- id is unique identifier
+                        join (select distinct user_id from fivetran.transactly_app_production_rec_accounts.user_role where role_id in(4, 5)) ur
+                            on tc.id = ur.user_id
+                        on hb.transactly_id = tc.id
+                    -- user_agent_subscription_tier has dups, this is to find the most recent record
+                    left join(
+                        select a.*
+                        from
+                            fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier a
+                            join (select user_id, max(start_date) start_date from fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier group by user_id) b
+                                on a.user_id = b.user_id
+                                and a.start_date = b.start_date
+                    ) uast on tc.id = uast.user_id
+                    left join fivetran.transactly_app_production_rec_accounts.agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
+
+                    -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
+                    left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user assigned on tc.assigned_transactly_tc_id = assigned.id
 
                 where
                     ifnull(upper(agt._fivetran_deleted), 'FALSE') = 'FALSE'
@@ -261,6 +252,9 @@ create or replace table dimensional.dim_agent as
 
             -- hubspot agents who aren't in the MLS
             ,unique_hb_agents as(
+            -- there are about 4 tc_id's that have dups
+            -- looks like the reason is due to there being duplicate working.mls_hubspot_agent.transactly_id - two different agents with the same transactly id
+            -- in other words it's a source error in Hubspot
                 select
                     a.*
                     ,tc.id
@@ -272,10 +266,31 @@ create or replace table dimensional.dim_agent as
                     ,concat(tc.first_name, ' ', tc.last_name) as TC_fullname
                     ,assigned.id as TC_assigned_user_id
                     ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
+                    ,tc.email as tc_email
+                    ,tc.first_login as tc_first_login
+                    ,tc.autopay_date as tc_autopay_date
+                    ,ast.name as tc_membership_type
+                    ,uast.price as membership_price
+                    ,uast.end_date as membership_end_date
                 from
                     dev.working.mls_hubspot_agent a
-                    left join FIVETRAN.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user tc on a.transactly_id = tc.id
+                    left join FIVETRAN.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user tc
+                        join (select distinct user_id from fivetran.transactly_app_production_rec_accounts.user_role where role_id in(4, 5)) ur
+                            on tc.id = ur.user_id
+                        on a.transactly_id = tc.id
+                    -- user_agent_subscription_tier has dups, this is to find the most recent record
+                    left join(
+                        select a.*
+                        from
+                            fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier a
+                            join (select user_id, max(start_date) start_date from fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier group by user_id) b
+                                on a.user_id = b.user_id
+                                and a.start_date = b.start_date
+                    ) uast on tc.id = uast.user_id
+                    left join fivetran.transactly_app_production_rec_accounts.agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
                     left join MLS_combined b on a.contact_id = b.HB_contact_id
+
+                    -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
                     left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user assigned on tc.assigned_transactly_tc_id = assigned.id
                 where
                     b.hb_contact_id is null
@@ -284,14 +299,31 @@ create or replace table dimensional.dim_agent as
             -- Transactly agents who aren't in Hubspot/MLS
             ,unique_tc_agents as(
                 select
-                    u.*
-                    ,concat(u.first_name, ' ', u.last_name) as TC_fullname
+                    tc.*
+                    ,concat(tc.first_name, ' ', tc.last_name) as TC_fullname
                     ,assigned.id as TC_assigned_user_id
                     ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
+                    ,assigned.email as tc_email
+                    ,tc.first_login as tc_first_login
+                    ,tc.autopay_date as tc_autopay_date
+                    ,ast.name as tc_membership_type
+                    ,uast.price as membership_price
+                    ,uast.end_date as membership_end_date
                 from
-                    FIVETRAN.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user u  -- desc table dev.working.mls_hubspot_agent
-                    left join dev.working.mls_hubspot_agent a on a.transactly_id = u.id
-                    left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user assigned on u.assigned_transactly_tc_id = assigned.id
+                    FIVETRAN.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user tc  -- desc table dev.working.mls_hubspot_agent
+                    join (select distinct user_id from fivetran.transactly_app_production_rec_accounts.user_role where role_id in(4, 5)) ur on tc.id = ur.user_id
+                    -- user_agent_subscription_tier has dups, this is to find the most recent record
+                    left join(
+                        select a.*
+                        from
+                            fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier a
+                            join (select user_id, max(start_date) start_date from fivetran.transactly_app_production_rec_accounts.user_agent_subscription_tier group by user_id) b
+                                on a.user_id = b.user_id
+                                and a.start_date = b.start_date
+                    ) uast on tc.id = uast.user_id
+                    left join fivetran.transactly_app_production_rec_accounts.agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
+                    left join dev.working.mls_hubspot_agent a on a.transactly_id = tc.id
+                    left join fivetran.TRANSACTLY_APP_PRODUCTION_REC_ACCOUNTS.user assigned on tc.assigned_transactly_tc_id = assigned.id
                 where a.transactly_id is null
             )
 
@@ -360,6 +392,12 @@ create or replace table dimensional.dim_agent as
                     ,hb.last_online_date as tc_last_online_date
                     ,hb.TC_assigned_user_id
                     ,hb.TC_assigned_name
+                    ,hb.tc_email
+                    ,hb.tc_first_login
+                    ,hb.tc_autopay_date
+                    ,hb.tc_membership_type
+                    ,hb.membership_price
+                    ,hb.membership_end_date
                 from unique_hb_agents hb
 
                 -- Transactly agents who aren't in Hubspot/MLS
@@ -423,6 +461,12 @@ create or replace table dimensional.dim_agent as
                     ,tc.last_online_date as tc_last_online_date
                     ,tc.TC_assigned_user_id
                     ,tc.TC_assigned_name
+                    ,tc.tc_email
+                    ,tc.tc_first_login
+                    ,tc.tc_autopay_date
+                    ,tc.tc_membership_type
+                    ,tc.membership_price
+                    ,tc.membership_end_date
                 from unique_tc_agents tc
             )
 
@@ -438,7 +482,7 @@ create or replace table dimensional.dim_agent as
         from
             combine_all ca
 
-     union select '0', '0', '0', '0', '0', '0', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+     union select '0', '0', '0', '0', '0', '0', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
 
 
 
