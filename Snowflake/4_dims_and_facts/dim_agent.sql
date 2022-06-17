@@ -205,7 +205,7 @@ use dev.dimensional;
                         -- emails are similar
                         or jarowinkler_similarity(trim(lower(agt.email)), trim(lower(hb.email))) >= 98
 
-                        -- phone numbers match and the zip codes match or are null
+                        -- phone numbers match
                         or(
                             (
                                 case
@@ -214,6 +214,7 @@ use dev.dimensional;
                                     end =
                                 case
                                     when left(regexp_replace(hb.mobile_phone_number, '[^0-9]'), 1) = '1' then ltrim(regexp_replace(hb.mobile_phone_number, '[^0-9]'), 1)
+                                    when regexp_replace(hb.mobile_phone_number, '[^0-9]') like '0000%' then null
                                     else regexp_replace(hb.mobile_phone_number, '[^0-9]')
                                     end
                                 or
@@ -223,6 +224,7 @@ use dev.dimensional;
                                     end =
                                 case
                                     when left(regexp_replace(hb.mobile_phone_number, '[^0-9]'), 1) = '1' then ltrim(regexp_replace(hb.mobile_phone_number, '[^0-9]'), 1)
+                                    when regexp_replace(hb.mobile_phone_number, '[^0-9]') like '0000%' then null
                                     else regexp_replace(hb.mobile_phone_number, '[^0-9]')
                                     end
                             )

@@ -1,12 +1,5 @@
 --dim_line_item
 
-/*
-use prod.dimensional;
-use stage.dimensional;
-use dev.dimensional;
- */
-
-
 merge into dim_line_item as target
 using(
     select
