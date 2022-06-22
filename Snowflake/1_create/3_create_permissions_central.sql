@@ -45,10 +45,10 @@ grant usage on warehouse airbyte_wh to role airbyte_role;
 
 
 -- dbt_role
-grant role hubspot_extract_owner to role dbt_role;
-grant role skyvia_owner to role dbt_role;
-grant role fivetran_owner to role dbt_role;
-grant role dev_owner to role dbt_role;
+grant role airbyte_read to role dbt_role;
+grant role fivetran_read to role dbt_role;
+grant role skyvia_read to role dbt_role;
+grant role hubspot_extract_read to role dbt_role;
 grant usage on warehouse dbt_wh to role dbt_role;
 
 
@@ -126,6 +126,14 @@ grant ownership on future schemas in database airbyte to role airbyte_owner;
 grant ownership on all tables in database airbyte to role airbyte_owner;
 grant ownership on future tables in database airbyte to role airbyte_owner;
 grant create schema, monitor, usage on database airbyte to role airbyte_owner;
+
+
+-- airbyte_read
+grant usage on database airbyte to role airbyte_read;
+grant usage on all schemas in database airbyte to role airbyte_read;
+grant select on all tables in database airbyte to role airbyte_read;
+grant select on future tables in database airbyte to role airbyte_read;
+
 
 
 -- fivetran_owner and quickbooks_owner should be kept together in this order so that all
@@ -247,6 +255,13 @@ grant ownership on all tables in database hubspot_extract to role hubspot_extrac
 grant ownership on future tables in database hubspot_extract to role hubspot_extract_owner;
 grant ownership on all views in database hubspot_extract to role hubspot_extract_owner;
 grant ownership on future views in database hubspot_extract to role hubspot_extract_owner;
+
+
+-- hubspot_extract_read
+grant usage on database hubspot_extract to role hubspot_extract_read;
+grant usage on all schemas in database hubspot_extract to role hubspot_extract_read;
+grant select on all tables in database hubspot_extract to role hubspot_extract_read;
+grant select on future tables in database hubspot_extract to role hubspot_extract_read;
 
 
 -- skyvia_read

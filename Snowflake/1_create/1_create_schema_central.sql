@@ -74,9 +74,11 @@ create role if not exists tableau_role;
 
 -- create object roles
 create role if not exists airbyte_owner;
+create role if not exists airbyte_read;
 create role if not exists fivetran_owner;
 create role if not exists fivetran_read;
 create role if not exists hubspot_extract_owner;
+create role if not exists hubspot_extract_read;
 create role if not exists prod_owner;
 create role if not exists prod_read;
 create role if not exists prod_load_read;
