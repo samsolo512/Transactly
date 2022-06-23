@@ -21,7 +21,12 @@ with src_MLS_listings as(
         ,propertyType
         ,listoffice_id
         ,source
+        ,modificationtimestamp
+        ,updated_at
     from airbyte.postgresql.listings
+    where
+        to_date(listingcontractdate) >= '1/1/2021'
+        and to_date(listingcontractdate) <= current_date()
 )
 
 select
@@ -54,4 +59,6 @@ select
     ,l.propertyType
     ,l.listoffice_id
     ,l.source
+    ,l.modificationtimestamp
+    ,l.updated_at
 from src_MLS_listings l

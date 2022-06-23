@@ -6,43 +6,44 @@ with
 
     ,unique_listing as(
         select
-            listingkey
+            mls_key
             ,max(modificationtimestamp) as modificationtimestamp
         from
-            {{ ref('src_mls_listings') }} l
-        group by listingkey
+            src_mls_listings l
+        group by mls_key
     )
 
     ,max_updated as(
         select
-            l.listingkey
+            l.mls_key
             ,l.modificationtimestamp
             ,max(l.updated_at) as updated_at
         from
-            {{ ref('src_mls_listings') }} l
+            src_mls_listings l
             join unique_listing ul
                 on l.modificationtimestamp = ul.modificationtimestamp
-                and l.listingkey = ul.listingkey
-        group by l.listingkey, l.modificationtimestamp
+                and l.mls_key = ul.mls_key
+        group by l.mls_key, l.modificationtimestamp
     )
 
     ,max_id as(
         select
-            l.listingkey
+            l.mls_key
             ,l.modificationtimestamp
             ,l.updated_at
-            ,max(l.id) as id
+            ,max(l.mls_id) as mls_id
         from
-            {{ ref('src_mls_listings') }} l
+            src_mls_listings l
             join max_updated ul
                 on l.modificationtimestamp = ul.modificationtimestamp
-                and l.listingkey = ul.listingkey
+                and l.mls_key = ul.mls_key
                 and l.updated_at = ul.updated_at
-        group by l.listingkey, l.modificationtimestamp, l.updated_at
+        group by l.mls_key, l.modificationtimestamp, l.updated_at
+    )
 
 select
-    l.listingkey as mls_key  -- only unique id
-    ,l.id as mls_id
+    l.mls_key  -- only unique id
+    ,l.mls_id
     ,l.status
     ,l.listprice
     ,l.closeprice
@@ -65,9 +66,9 @@ select
 from
     src_mls_listings l
     join max_id ul
-        on l.listingkey = ul.listingkey
+        on l.mls_key = ul.mls_key
         and l.modificationtimestamp = ul.modificationtimestamp
         and l.updated_at = ul.updated_at
-        and l.id = ul.id
+        and l.mls_id = ul.mls_id
 where
     lower(l.propertytype) in ('residential', 'land', 'farm', 'attached dwelling')
