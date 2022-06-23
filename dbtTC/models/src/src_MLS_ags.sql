@@ -1,4 +1,4 @@
-with src_TC_ags as(
+with src_MLS_ags as(
     select *
     from airbyte.postgresql.ags
 )
@@ -20,4 +20,4 @@ select
     ,agt.mainOfficeMLSID as MLS_main_office_MLS_ID
     ,agt.officeMLSID as MLS_office_MLS_ID
     ,agt.brokerMLSID as MLS_broker_MLS_ID
-from src_TC_ags agt
+from src_MLS_ags agt

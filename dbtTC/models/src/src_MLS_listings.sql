@@ -1,4 +1,4 @@
-with src_TC_listings as(
+with src_MLS_listings as(
     select
         listingkey
         ,id
@@ -54,4 +54,4 @@ select
     ,l.propertyType
     ,l.listoffice_id
     ,l.source
-from src_TC_listings l
+from src_MLS_listings l

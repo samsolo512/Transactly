@@ -100,9 +100,10 @@ grant usage on warehouse powerbi_wh to role PowerBI_role;
 -- admin_read
 grant role fivetran_read to role admin_read;
 grant role prod_load_read to role admin_read;
-grant usage on warehouse compute_wh to role admin_read;
 grant role skyvia_read to role admin_read;
 grant role quickbooks_read to role admin_read;
+grant role hubspot_extract_read to role admin_read;
+grant usage on warehouse compute_wh to role admin_read;
 
 
 -- data_analyst

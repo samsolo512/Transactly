@@ -1,4 +1,4 @@
-with src_TC_ofs as(
+with src_MLS_ofs as(
     select *
     from airbyte.postgresql.ofs
 )
@@ -23,4 +23,4 @@ select
     ,ofs.ua as MLS_ua
     ,ofs.i1 as MLS_i1
     ,ofs.modificationTimestamp as MLS_modification_time_stamp
-from src_TC_ofs ofs
+from src_MLS_ofs ofs

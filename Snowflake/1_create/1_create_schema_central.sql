@@ -58,6 +58,7 @@ create user if not exists NNIEMEYER default_role = accountadmin default_warehous
 create user if not exists qstrother default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
 create user if not exists jocllado default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
 create user if not exists mclifton default_role = data_analyst default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
+create user if not exists alissat default_role = admin_read default_warehouse = compute_wh default_namespace = prod.load password = 'DiFBuyCxFWTIUpw7Y3XU' must_change_password = true;
 
 
 -- create user roles
