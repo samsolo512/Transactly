@@ -1,33 +1,45 @@
-with src_MLS_listings as(
-    select
-        listingkey
-        ,id
-        ,standardstatus
-        ,listprice
-        ,closeprice
-        ,listingid
-        ,streetdirprefix
-        ,streetsuffix
-        ,streetname
-        ,streetnumber
-        ,city
-        ,stateorprovince
-        ,postalcode
-        ,listingContractDate
-        ,closeDate
-        ,calculated_date_on
-        ,cumulativeDaysOnMarket
-        ,listagent_id
-        ,propertyType
-        ,listoffice_id
-        ,source
-        ,modificationtimestamp
-        ,updated_at
-    from airbyte.postgresql.listings
-    where
-        to_date(listingcontractdate) >= '1/1/2021'
-        and to_date(listingcontractdate) <= current_date()
-)
+with
+    src_mls_listings as(
+        select *
+        from airbyte.postgresql.listings
+    )
+
+    ,unique_listing as(
+        select
+            listingkey
+            ,max(modificationtimestamp) as modificationtimestamp
+        from
+            src_mls_listings l
+        group by listingkey
+    )
+
+    ,max_updated as(
+        select
+            l.listingkey
+            ,l.modificationtimestamp
+            ,max(l.updated_at) as updated_at
+        from
+            src_mls_listings l
+            join unique_listing ul
+                on l.modificationtimestamp = ul.modificationtimestamp
+                and l.listingkey = ul.listingkey
+        group by l.listingkey, l.modificationtimestamp
+    )
+
+    ,max_id as(
+        select
+            l.listingkey
+            ,l.modificationtimestamp
+            ,l.updated_at
+            ,max(l.id) as mls_id
+        from
+            src_mls_listings l
+            join max_updated ul
+                on l.modificationtimestamp = ul.modificationtimestamp
+                and l.listingkey = ul.listingkey
+                and l.updated_at = ul.updated_at
+        group by l.listingkey, l.modificationtimestamp, l.updated_at
+    )
 
 select
     l.listingkey as mls_key
@@ -61,4 +73,14 @@ select
     ,l.source
     ,l.modificationtimestamp
     ,l.updated_at
-from src_MLS_listings l
+from
+    src_MLS_listings l
+    join max_id ul
+        on l.listingkey = ul.listingkey
+        and l.modificationtimestamp = ul.modificationtimestamp
+        and l.updated_at = ul.updated_at
+        and l.id = ul.mls_id
+where
+    lower(l.propertytype) in ('residential', 'land', 'farm', 'attached dwelling')
+    and to_date(listingcontractdate) >= '1/1/2021'
+    and to_date(listingcontractdate) <= current_date()

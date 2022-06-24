@@ -19,6 +19,11 @@ with
         from {{ ref('src_tc_user_agent_subscription_tier') }}
     )
 
+    ,src_mls_listings as (
+        select *
+        from {{ ref('src_mls_listings') }}
+    )
+
     ,src_tc_user as(
         select *
         from {{ ref('src_tc_user') }}
@@ -118,10 +123,9 @@ with
                     top 1000  -- comment out this line when done testing
                     agt.id
                 from
-                    working.listings_current list
+                    src_mls_listings list
                     join src_mls_ags as agt
                         on list.listagent_id = agt.id
-                        and ifnull(upper(agt._fivetran_deleted), 'FALSE') = 'FALSE'
             ) l
                 on agt.id = l.id
 
@@ -169,18 +173,16 @@ with
             left join(
                 select a.*
                 from
-                    src_user_agent_subscastription_tier a
+                    src_tc_user_agent_subscription_tier a
                     join (select user_id, max(start_date) start_date from src_tc_user_agent_subscription_tier group by user_id) b
                         on a.user_id = b.user_id
                         and a.start_date = b.start_date
             ) uast on tc.id = uast.user_id
-            left join src_tc_agent_subscription_tier on ast.id = uast.agent_subscription_tier_id
+            left join src_tc_agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
 
             -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
             left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.id
 
-        where
-            ifnull(upper(agt._fivetran_deleted), 'FALSE') = 'FALSE'
     )
 
     -- hubspot agents who aren't in the MLS

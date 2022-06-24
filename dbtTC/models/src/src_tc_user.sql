@@ -13,7 +13,7 @@ select
     ,u.last_online_date
     ,u.first_name
     ,u.last_name
-    ,concat(u.first_name, ' ', u.last_name) as tc_fullname
+    ,concat(u.first_name, ' ', u.last_name) as fullname
     ,u.email
     ,u.first_login
     ,u.autopay_date
