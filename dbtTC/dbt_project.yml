@@ -36,3 +36,7 @@ models:
     +materialized: view
     dim:
       +materialized: table
+    working:
+      +materialized: ephemeral
+    fact:
+      +materialized: table

@@ -7,4 +7,6 @@ with src_tc_order as(
 select
     o.id
     ,o.transaction_id
+    ,o.agent_id
+    ,o.created
 from src_tc_order o

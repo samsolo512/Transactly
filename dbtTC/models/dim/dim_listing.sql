@@ -5,7 +5,8 @@ with
     )
 
 select
-    l.mls_key  -- only unique id
+    working.seq_dim_listing.nextval as listing_pk
+    ,l.mls_key  -- only unique id
     ,l.mls_id
     ,l.status
     ,l.listprice

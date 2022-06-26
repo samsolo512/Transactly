@@ -17,4 +17,5 @@ select
     ,u.email
     ,u.first_login
     ,u.autopay_date
+    ,u.created
 from src_tc_user u

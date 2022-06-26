@@ -6,7 +6,7 @@ with
 
     ,dim_agent_HS as(
         select *
-        from {{ ref('dim_agent_HS') }}
+        from {{ ref('HS_agent') }}
     )
 
     ,src_tc_agent_subscription_tier as(

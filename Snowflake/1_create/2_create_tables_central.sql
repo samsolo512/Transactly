@@ -87,6 +87,8 @@ create or replace table dim_date (
 )
 ;
 
+create or replace sequence working.seq_dim_client start=1 increment=1;
+
 
 
 -- dim_line_item

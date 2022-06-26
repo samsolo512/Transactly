@@ -3,7 +3,31 @@
 -- client_orders
 -- client_revenue
 
-create or replace table fact_order as
+with
+    src_tc_transaction as(
+        select *
+        from {{ ref('src_tc_transaction')}}
+    )
+
+    ,src_tc_order as(
+        select *
+        from {{ ref('src_tc_order')}}
+    )
+
+    ,dim_line_item as(
+        select *
+        from {{ ref('dim_line_item')}}
+    )
+
+    ,dim_agent as(
+        select *
+        from {{ ref('dim_agent')}}
+    )
+
+    ,dim_date as(
+        select *
+        from {{ ref('dim_date')}}
+    )
 
 select
     -- grain
@@ -16,7 +40,7 @@ select
     ,cancel_date.date_pk as line_item_cancelled_date_pk
 
     -- misc
-    ,datediff(day, b.created, a.created) as order_transact_start_lag
+    ,datediff(day, b.created, a.created_date) as order_transact_start_lag
     ,case when l.description in ('Listing Coordination Fee','Transaction Coordination Fee') and lower(l.status) not in ('canceled', 'withdrawn', 'cancelled') then datediff(day, create_date.date_id, due_date.date_id) else null end as days_to_close
     ,case when l.description in ('Listing Coordination Fee', 'Transaction Coordination Fee') and lower(line.status) = 'in progress' then 1 else 0 end as in_progress_orders
 
@@ -48,31 +72,15 @@ select
     ,case when l.description in ('Applied Credit', 'Applied Discount') and lower(l.status) not in ('canceled', 'withdrawn', 'cancelled') then l.agent_pays else 0 end as discounts_given
 
 from
-    fivetran.transactly_app_production_rec_accounts.transaction a
-    left join fivetran.transactly_app_production_rec_accounts.tc_order b  -- select top 10 * from fivetran.transactly_app_production_rec_accounts.tc_order
-        on a.id = b.transaction_id
-        and b._fivetran_deleted = 'FALSE'
-    left join fivetran.transactly_app_production_rec_accounts.line_item l  -- select top 10 * from fivetran.transactly_app_production_rec_accounts.line_item
+    src_tc_transaction a
+    left join src_tc_order b
+        on a.transaction_id = b.transaction_id
+    left join src_tc_line_item l
         on b.id = l.order_id
-        and l._fivetran_deleted = 'FALSE'
-    left join dim_line_item line on l.id = line.line_item_id  -- select top 10 * from dim_line_item
+    left join dim_line_item line on l.id = line.line_item_id
     left join dim_agent agt on agt.tc_id = l.user_id
     left join dim_date create_date on cast(l.created as date) = create_date.date_id
     left join dim_date due_date on cast(l.due_date as date) = due_date.date_id
     left join dim_date cancel_date on cast(l.cancelled_date as date) = cancel_date.date_id
 where
     l.id is not null
-;
-
-
-
-select
-    *
-from
-    fact_order fact
-    join dim_agent agent on fact.agent_pk = agent.agent_pk
-    join dim_line_item line on fact.line_item_pk = line.line_item_pk
-    join dim_date line_item_created_date on fact.line_item_created_date_pk = line_item_created_date.date_pk
-    join dim_date line_item_due_date on fact.line_item_created_date_pk = line_item_due_date.date_pk
-    join dim_date line_item_cancelled_date on fact.line_item_created_date_pk = line_item_cancelled_date.date_pk
-;
