@@ -8,4 +8,6 @@ select
     t.id as transaction_id
     ,t.created_by_id as user_id
     ,t.created as created_date
+    ,t.closed_date
+    ,t.created_by_id
 from src_tc_transaction t

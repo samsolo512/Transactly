@@ -18,4 +18,5 @@ select
     ,u.first_login
     ,u.autopay_date
     ,u.created
+    ,u.google_user_id
 from src_tc_user u

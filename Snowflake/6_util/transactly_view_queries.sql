@@ -117,7 +117,6 @@ select
     max(trans.created) as last_transaction_created_date
 from
     fivetran.transactly_app_production_rec_accounts.transaction trans
-
     left join (
         select
             created_by_id as agent_id,
@@ -132,7 +131,6 @@ from
             )
         group by created_by_id
     ) diy_transactions on diy_transactions.agent_id = trans.created_by_id
-
     left join (
         select
             m.user_id as agent_id,
@@ -149,7 +147,6 @@ from
             )
         group by m.user_id
     ) tm on tm.agent_id = trans.created_by_id
-
     left join (
         select
             t.created_by_id as agent_id,

@@ -9,4 +9,7 @@ select
     ,o.transaction_id
     ,o.agent_id
     ,o.created
+    ,o.assigned_tc_id
+    ,o.status
+    ,o.type
 from src_tc_order o

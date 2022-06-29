@@ -31,13 +31,22 @@ with
 
 select
     -- grain
-    agt.agent_pk
-    ,line.line_item_pk
+    line.line_item_pk
+
+    -- dims
+    ,client.client_pk
+    ,agt.agent_pk
 
     -- dates
-    ,create_date.date_pk as line_item_created_date_pk
-    ,due_date.date_pk as line_item_due_date_pk
-    ,cancel_date.date_pk as line_item_cancelled_date_pk
+    ,create_date.date_pk as created_date_pk
+    ,due_date.date_pk as due_date_pk
+    ,cancel_date.date_pk as cancelled_date_pk
+    ,closed_date.date_pk as closed_date_pk
+
+    -- flags
+    ,case when closed_date.date_id is not null then 1 else 0 end as closed_date_flag
+    ,case when b.assigned_tc_id is not null then 1 else 0 end as assigned_tc_flag
+    ,case when create_date.date_id is not null then 1 else 0 end as first_order_placed_flag
 
     -- misc
     ,datediff(day, b.created, a.created_date) as order_transact_start_lag
@@ -73,14 +82,14 @@ select
 
 from
     src_tc_transaction a
-    left join src_tc_order b
-        on a.transaction_id = b.transaction_id
-    left join src_tc_line_item l
-        on b.id = l.order_id
-    left join dim_line_item line on l.id = line.line_item_id
-    left join dim_agent agt on agt.tc_id = l.user_id
+    join src_tc_order b on a.transaction_id = b.transaction_id
+    join src_tc_line_item l on b.id = l.order_id
+    join dim_line_item line on l.id = line.line_item_id
+    left join dim_agent agt on agt.tc_id = b.agent_id
+    left join dim_client client on l.user_id = client.user_id
     left join dim_date create_date on cast(l.created as date) = create_date.date_id
     left join dim_date due_date on cast(l.due_date as date) = due_date.date_id
     left join dim_date cancel_date on cast(l.cancelled_date as date) = cancel_date.date_id
+    left join dim_date closed_date on cast(a.closed_date as date) = closed_date.date_id
 where
     l.id is not null

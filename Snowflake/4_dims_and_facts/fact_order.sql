@@ -63,16 +63,3 @@ from
 where
     l.id is not null
 ;
-
-
-
-select
-    *
-from
-    fact_order fact
-    join dim_agent agent on fact.agent_pk = agent.agent_pk
-    join dim_line_item line on fact.line_item_pk = line.line_item_pk
-    join dim_date line_item_created_date on fact.line_item_created_date_pk = line_item_created_date.date_pk
-    join dim_date line_item_due_date on fact.line_item_created_date_pk = line_item_due_date.date_pk
-    join dim_date line_item_cancelled_date on fact.line_item_created_date_pk = line_item_cancelled_date.date_pk
-;
