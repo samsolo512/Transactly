@@ -4,16 +4,8 @@
 -- https://docs.snowflake.com/en/user-guide-data-unload.html
 -- https://docs.snowflake.com/en/sql-reference/sql/copy-into-location.html#retaining-null-empty-field-data-in-unloaded-files
 
--- dims
-copy into @GCP_stage/dim_date from dimensional.dim_date overwrite = True;
-copy into @GCP_stage/dim_line_item from dimensional.dim_line_item overwrite = True;
-copy into @GCP_stage/dim_order from dimensional.dim_order overwrite = True;
-copy into @GCP_stage/dim_transaction from dimensional.dim_transaction overwrite = True;
-copy into @GCP_stage/dim_user from dimensional.dim_user overwrite = True;
 
--- facts
-copy into @GCP_stage/fact_order_line_item from dimensional.fact_order_line_item overwrite = True;
-copy into @GCP_stage/fact_user_month from dimensional.fact_user_month overwrite = True;
+copy into @GCP_stage/GCP_fact_order from dimensional.GCP_fact_order overwrite = True;
 
 -- views
 copy into @GCP_stage/vw_order_line_item 

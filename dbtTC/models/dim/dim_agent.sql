@@ -120,7 +120,7 @@ with
             -- this is to limit the number of agents, takes it down to 282k rows
             join (
                 select distinct
-                    top 1000  -- comment out this line when done testing
+--                     top 1000  -- comment out this line when done testing
                     agt.id
                 from
                     src_mls_listings list

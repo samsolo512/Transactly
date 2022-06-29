@@ -40,3 +40,5 @@ models:
       +materialized: ephemeral
     fact:
       +materialized: table
+    GCP:
+      +materialized: view

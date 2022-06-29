@@ -19,17 +19,19 @@ with
         from {{ ref('dim_date') }}
     )
 
-select
-    line.description as fee_type
-    ,agent.tc_is_tc_client as tc_client_flag
-    --,first_order_placed_flag
-    --,tier
-    ,fact.*
-from
-    fact_order fact
-    join dim_agent agent on fact.agent_pk = agent.agent_pk
-    join dim_line_item line on fact.line_item_pk = line.line_item_pk
-    left join dim_date line_item_created_date on fact.created_date_pk = line_item_created_date.date_pk
-    left join dim_date line_item_due_date on fact.created_date_pk = line_item_due_date.date_pk
-    left join dim_date line_item_cancelled_date on fact.created_date_pk = line_item_cancelled_date.date_pk
-    left join dim_date closed_date on cast(fact.closed_date_pk as date) = closed_date.date_id
+copy into @GCP_stage/GCP_fact_order from(
+    select
+        line.description as fee_type
+        ,agent.tc_is_tc_client as tc_client_flag
+        --,first_order_placed_flag
+        --,tier
+        ,fact.*
+    from
+        fact_order fact
+        join dim_agent agent on fact.agent_pk = agent.agent_pk
+        join dim_line_item line on fact.line_item_pk = line.line_item_pk
+        left join dim_date line_item_created_date on fact.created_date_pk = line_item_created_date.date_pk
+        left join dim_date line_item_due_date on fact.created_date_pk = line_item_due_date.date_pk
+        left join dim_date line_item_cancelled_date on fact.created_date_pk = line_item_cancelled_date.date_pk
+        left join dim_date closed_date on cast(fact.closed_date_pk as date) = closed_date.date_id
+)
