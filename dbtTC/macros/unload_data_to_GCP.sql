@@ -35,11 +35,11 @@
                 ,client.tier_1 as tier_1_date  -- due date of 5th sale
                 ,client.tier_2 as tier_2_date  -- due date of 1st sale
                 ,client.tier_3 as tier_3_date  -- user created date
-                -- date_first_order_placed
-                -- date_first_order_closed
-                ,client.last_order_created as date_last_order_placed
+                ,client.first_order_placed as date_first_order_placed
+                ,client.first_order_closed as date_first_order_closed
+                ,client.last_order_placed as date_last_order_placed
                 ,client.last_order_due
-                -- date_5th_order_closed
+                ,client.fifth_order_closed as date_5th_order_closed
             //    ,agent.tc_is_tc_client as tc_client_flag
 
             from
