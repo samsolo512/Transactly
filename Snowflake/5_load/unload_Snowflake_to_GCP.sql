@@ -3,6 +3,7 @@
 -- unload to GCP
 -- https://docs.snowflake.com/en/user-guide-data-unload.html
 -- https://docs.snowflake.com/en/sql-reference/sql/copy-into-location.html#retaining-null-empty-field-data-in-unloaded-files
+-- https://docs.snowflake.com/en/user-guide/data-unload-considerations.html#unloading-to-a-single-file
 
 
 copy into @GCP_stage/GCP_fact_order from dimensional.GCP_fact_order overwrite = True;
@@ -36,6 +37,7 @@ copy into @GCP_stage/vw_order_line_item
             join dim_date t_close_date on fact.transaction_closed_date_pk = t_close_date.date_pk
     )
     overwrite = true
+    single = true
 ;
 
 

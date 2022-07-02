@@ -8,12 +8,13 @@ select
     l.description
     ,l.status
     ,l.user_id
-    ,l.created
-    ,l.due_date
+    ,cast(l.created as date) as created
+    ,cast(l.due_date as date) as due_date
     ,l.order_id
     ,l.id
-    ,l.cancelled_date
+    ,cast(l.cancelled_date as date) as cancelled_date
     ,l.paid
+    ,l.tc_paid
     ,l.agent_pays
     ,l.office_pays
 from src_tc_line_item l

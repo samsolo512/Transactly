@@ -50,6 +50,7 @@ grant role fivetran_read to role dbt_role;
 grant role skyvia_read to role dbt_role;
 grant role hubspot_extract_read to role dbt_role;
 grant usage on warehouse dbt_wh to role dbt_role;
+grant usage on integration GCP to role dbt_role;
 
 
 -- fivetran_role
@@ -231,6 +232,8 @@ grant ownership on future procedures in database dev to role dev_owner;
 grant ownership on future sequences in database dev to role dev_owner;
 grant ownership on future tables in schema dev.public to role dev_owner;
 grant create stage on schema dev.working to role dev_owner;
+grant ownership on all stages in database dev to role dev_owner;
+grant ownership on all file formats in database dev to role dev_owner;
 
 
 -- dev_read

@@ -5,7 +5,7 @@ with src_tc_office as(
 )
 
 select
-    o.id
-    ,o.name
+    o.id as office_id
+    ,o.name as office_name
     ,o.parent_office_id
 from src_tc_office o

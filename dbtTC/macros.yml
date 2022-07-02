@@ -1,0 +1,5 @@
+version: 2
+
+macros:
+    - name: unload_data_to_GCP
+      description: upload data from Snowflake to GCP storage

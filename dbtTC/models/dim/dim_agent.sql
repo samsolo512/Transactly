@@ -4,7 +4,7 @@ with
         from {{ ref('src_mls_ags') }}
     )
 
-    ,dim_agent_HS as(
+    ,HS_agent as(
         select *
         from {{ ref('HS_agent') }}
     )
@@ -41,7 +41,7 @@ with
             ,agt.key as MLS_key
             ,agt.MLSID as MLS_ID
             ,hb.contact_id as HB_contact_id
-            ,tc.id as tc_id
+            ,tc.user_id as tc_id
 
             -- matching
             ,jarowinkler_similarity(trim(lower(agt.fullname)), trim(lower(concat(hb.first_name, ' ', hb.last_name)))) pct_similar
@@ -105,7 +105,7 @@ with
             ,tc.is_tc_client as tc_is_tc_client
             ,tc.assigned_transactly_tc_id as tc_assigned_transactly_tc_id
             ,tc.last_online_date as tc_last_online_date
-            ,assigned.id as TC_assigned_user_id
+            ,assigned.user_id as TC_assigned_user_id
             ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
             ,tc.email as tc_email
             ,tc.first_login as tc_first_login
@@ -129,7 +129,7 @@ with
             ) l
                 on agt.id = l.id
 
-            left join dim_agent_HS hb  -- 75k rows, contact_id is unique id
+            left join HS_agent hb  -- 75k rows, contact_id is unique id
 
                 -- individual combination of name, state, city are similar and zip matches
                 on (
@@ -167,8 +167,8 @@ with
 
             left join src_tc_user tc -- id is unique identifier
                 join (select distinct user_id from src_tc_user_role where role_id in(4, 5)) ur
-                    on tc.id = ur.user_id
-                on hb.transactly_id = tc.id
+                    on tc.user_id = ur.user_id
+                on hb.transactly_id = tc.user_id
             -- user_agent_subscription_tier has dups, this is to find the most recent record
             left join(
                 select a.*
@@ -177,11 +177,11 @@ with
                     join (select user_id, max(start_date) start_date from src_tc_user_agent_subscription_tier group by user_id) b
                         on a.user_id = b.user_id
                         and a.start_date = b.start_date
-            ) uast on tc.id = uast.user_id
+            ) uast on tc.user_id = uast.user_id
             left join src_tc_agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
 
             -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
-            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.id
+            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.user_id
 
     )
 
@@ -192,14 +192,14 @@ with
     -- in other words it's a source error in Hubspot
         select
             a.*
-            ,tc.id
+            ,tc.user_id
             ,tc.join_date
             ,tc.is_active
             ,tc.is_tc_client
             ,tc.assigned_transactly_tc_id
             ,tc.last_online_date
             ,concat(tc.first_name, ' ', tc.last_name) as TC_fullname
-            ,assigned.id as TC_assigned_user_id
+            ,assigned.user_id as TC_assigned_user_id
             ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
             ,tc.email as tc_email
             ,tc.first_login as tc_first_login
@@ -208,11 +208,11 @@ with
             ,uast.price as membership_price
             ,uast.end_date as membership_end_date
         from
-            dim_agent_HS a
+            HS_agent a
             left join src_tc_user tc
                 join (select distinct user_id from src_tc_user_role where role_id in(4, 5)) ur
-                    on tc.id = ur.user_id
-                on a.transactly_id = tc.id
+                    on tc.user_id = ur.user_id
+                on a.transactly_id = tc.user_id
             -- user_agent_subscription_tier has dups, this is to find the most recent record
             left join(
                 select a.*
@@ -221,12 +221,12 @@ with
                     join (select user_id, max(start_date) start_date from src_tc_user_agent_subscription_tier group by user_id) b
                         on a.user_id = b.user_id
                         and a.start_date = b.start_date
-            ) uast on tc.id = uast.user_id
+            ) uast on tc.user_id = uast.user_id
             left join src_tc_agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
             left join MLS_combined b on a.contact_id = b.HB_contact_id
 
             -- this is to get who the assigned TC agent is to the user since both users and agents are in the same table
-            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.id
+            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.user_id
         where
             b.hb_contact_id is null
     )
@@ -236,7 +236,7 @@ with
         select
             tc.*
             ,concat(tc.first_name, ' ', tc.last_name) as TC_fullname
-            ,assigned.id as TC_assigned_user_id
+            ,assigned.user_id as TC_assigned_user_id
             ,concat(assigned.first_name, ' ', assigned.last_name) as TC_assigned_name
             ,assigned.email as tc_email
             ,tc.first_login as tc_first_login
@@ -246,7 +246,7 @@ with
             ,uast.end_date as membership_end_date
         from
             src_tc_user tc  -- desc table dev.working.mls_hubspot_agent
-            join (select distinct user_id from src_tc_user_role where role_id in(4, 5)) ur on tc.id = ur.user_id
+            join (select distinct user_id from src_tc_user_role where role_id in(4, 5)) ur on tc.user_id = ur.user_id
             -- user_agent_subscription_tier has dups, this is to find the most recent record
             left join(
                 select a.*
@@ -255,10 +255,10 @@ with
                     join (select user_id, max(start_date) start_date from src_tc_user_agent_subscription_tier group by user_id) b
                         on a.user_id = b.user_id
                         and a.start_date = b.start_date
-            ) uast on tc.id = uast.user_id
+            ) uast on tc.user_id = uast.user_id
             left join src_tc_agent_subscription_tier ast on ast.id = uast.agent_subscription_tier_id
-            left join dim_agent_HS a on a.transactly_id = tc.id
-            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.id
+            left join HS_agent a on a.transactly_id = tc.user_id
+            left join src_tc_user assigned on tc.assigned_transactly_tc_id = assigned.user_id
         where a.transactly_id is null
     )
 
@@ -273,7 +273,7 @@ with
             ,null as MLS_key
             ,null as MLS_ID
             ,hb.contact_id as HB_contact_id
-            ,hb.id as tc_id
+            ,hb.user_id as tc_id
 
             -- matching
             ,null as pct_similar
@@ -342,7 +342,7 @@ with
             ,null as MLS_key
             ,null as MLS_ID
             ,null as HB_contact_id
-            ,tc.id as tc_id
+            ,tc.user_id as tc_id
 
             -- matching
             ,null as pct_similar

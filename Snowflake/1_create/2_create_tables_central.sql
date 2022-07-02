@@ -86,7 +86,6 @@ create or replace table dim_date (
     ,update_datetime datetime
 )
 ;
-
 create or replace sequence working.seq_dim_client start=1 increment=1;
 
 
@@ -124,6 +123,8 @@ create or replace table dim_listing(
 ;
 create or replace sequence working.seq_dim_listing start=1 increment=1;
 
+
+create or replace sequence working.seq_dim_order start=1 increment=1;
 
 
 -- dim_task

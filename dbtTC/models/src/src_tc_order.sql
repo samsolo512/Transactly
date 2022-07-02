@@ -5,11 +5,14 @@ with src_tc_order as(
 )
 
 select
-    o.id
+    o.id as order_id
     ,o.transaction_id
     ,o.agent_id
-    ,o.created
+    ,cast(o.created as date) as created_date
     ,o.assigned_tc_id
-    ,o.status
-    ,o.type
+    ,o.status as order_status
+    ,o.type as order_type
+    ,o.address
+    ,o.state
+    ,o.side_id as order_side_id
 from src_tc_order o

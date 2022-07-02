@@ -40,5 +40,8 @@ models:
       +materialized: ephemeral
     fact:
       +materialized: table
-    GCP:
-      +materialized: view
+
+
+#hooks
+on-run-end:
+  - '{{unload_data_to_GCP()}}'

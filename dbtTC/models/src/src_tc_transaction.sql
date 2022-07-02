@@ -7,7 +7,7 @@ with src_tc_transaction as(
 select
     t.id as transaction_id
     ,t.created_by_id as user_id
-    ,t.created as created_date
-    ,t.closed_date
+    ,cast(t.created as date) as created_date
+    ,cast(t.closed_date as date) as closed_date
     ,t.created_by_id
 from src_tc_transaction t
