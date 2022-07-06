@@ -110,7 +110,9 @@ from(
         user_id
         ,first_name
         ,last_name
+        ,fullname
         ,email
+        ,brokerage
         ,max(last_order_placed) as last_order_placed
         ,max(last_order_due) as last_order_due
         ,max(tier_3) as tier_3
@@ -125,7 +127,9 @@ from(
             u.user_id
             ,u.first_name as first_name
             ,u.last_name as last_name
+            ,u.fullname
             ,u.email as email
+            ,u.brokerage
             ,loc.last_order_placed
             ,max(li.due_date) as last_order_due
             ,u.created as tier_3
@@ -152,7 +156,7 @@ from(
             and li.status not in ('withdrawn', 'cancelled')
             and li.due_date is not null
             and lower(li.description) like ('%coordination fee')
-        group by u.user_id, u.first_name, u.last_name, u.email, loc.last_order_placed, u.created, fifth.due_date, u.pays_at_title, fp.first_order_placed, fc.first_order_closed, fifth_c.closed_date
+        group by u.user_id, u.first_name, u.last_name, u.fullname, u.email, u.brokerage, loc.last_order_placed, u.created, fifth.due_date, u.pays_at_title, fp.first_order_placed, fc.first_order_closed, fifth_c.closed_date
 
 
         -- users without orders
@@ -161,7 +165,9 @@ from(
             u.user_id
             ,u.first_name as first_name
             ,u.last_name as last_name
+            ,u.fullname
             ,u.email as email
+            ,u.brokerage
             ,null as last_order_placed
             ,null as last_order_due
             ,u.created as tier_3
@@ -178,5 +184,5 @@ from(
             u.is_tc_client = 1
             and o.agent_id is null
     )
-    group by user_id, first_name, last_name, email
+    group by user_id, first_name, last_name, email, brokerage, fullname
 )
