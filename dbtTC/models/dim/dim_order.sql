@@ -18,6 +18,7 @@ select
     working.seq_dim_order.nextval as order_pk
     ,t.transaction_id
     ,o.order_id
+    ,o.agent_id
     ,usr.fullname as assigned_TC
     ,t_create.fullname as created_by
     ,t.created_date

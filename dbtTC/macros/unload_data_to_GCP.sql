@@ -5,7 +5,7 @@
 {% call statement('load_GCP_fact_order', fetch_result=true, auto_begin=true) %}
 
     -- begin;
-        copy into @GCP_stage/GCP_fact_order
+        copy into @GCP_stage/GCP_fact_line_item
         from(
             select
                 -- status (complete, tc paid)
@@ -42,7 +42,7 @@
             //    ,agent.tc_is_tc_client as tc_client_flag
 
             from
-                fact_order fact
+                fact_line_item fact
             //    join dim_agent agent on fact.agent_pk = agent.agent_pk
                 join dim_line_item line on fact.line_item_pk = line.line_item_pk
                 left join dim_client client on fact.client_pk = client.client_pk

@@ -2,17 +2,29 @@ select *
 from
     hubspot_extract.v2_daily.object_properties
 where
-    objectid = '133080485'
+    value like '%9356042278%'
 order by name
 ;
 
 
-select distinct name
+select *
 from
     hubspot_extract.v2_daily.object_properties
 where
-    name like '%type%'
+    objectid = '9356042278'
 order by name
+;
+
+
+select objectid, name, value, to_timestamp(value) lastdate
+from
+    hubspot_extract.v2_daily.object_properties
+where
+--     objectid = '9356042278'
+--     and name like '%date%'
+    name = 'hs_lastmodifieddate'
+    and objecttypeid = '0-3'  --deal
+order by lastdate
 ;
 
 

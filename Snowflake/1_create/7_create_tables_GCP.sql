@@ -1,6 +1,6 @@
---fact_order
+--fact_line_item
 
-create or replace table data-sandbox-343520.load.fact_order (
+create or replace table data-sandbox-343520.load.fact_line_item (
     address string
     ,state string
     ,description string

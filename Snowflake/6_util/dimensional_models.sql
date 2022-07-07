@@ -139,16 +139,29 @@ order by revenue desc
 
 
 ---------------------------------------------------------------------------------------------------------------
--- fact_order
+-- fact_line_item
 select
     *
 from
-    fact_order fact
+    fact_line_item fact
     join dim_line_item line on fact.line_item_pk = line.line_item_pk
     join dim_client client on fact.client_pk = client.client_pk
     join dim_date created_date on fact.created_date_pk = created_date.date_pk
-    join dim_date due_date on fact.created_date_pk = due_date.date_pk
+    join dim_date due_date on fact.due_date_pk = due_date.date_pk
     join dim_date cancelled_date on fact.created_date_pk = cancelled_date.date_pk
+;
+
+
+
+---------------------------------------------------------------------------------------------------------------
+-- order
+select
+    fact.*
+from
+    fact_order fact
+    join dim_order o on fact.order_pk = o.order_pk
+    join dim_user u on fact.assigned_tc_pk = u.user_pk
+    left join dim_date closed_date on fact.closed_date_pk = closed_date.date_pk
 ;
 
 
