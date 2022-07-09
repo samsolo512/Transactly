@@ -51,6 +51,8 @@ grant role skyvia_read to role dbt_role;
 grant role hubspot_extract_read to role dbt_role;
 grant usage on warehouse dbt_wh to role dbt_role;
 grant usage on integration GCP to role dbt_role;
+grant usage on stage dev.dimensional.GCP_stage to role dbt_role;
+grant usage on file format dev.dimensional.csv_format to role dbt_role;
 
 
 -- fivetran_role

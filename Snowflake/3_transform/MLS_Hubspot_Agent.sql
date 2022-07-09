@@ -22,9 +22,11 @@ from
 where
 --     objectid = '9356042278'
 --     and name like '%date%'
-    name = 'hs_lastmodifieddate'
+    name = 'notes_last_updated'
     and objecttypeid = '0-3'  --deal
-order by lastdate
+    and value is not null
+    and value <> ''
+-- order by lastdate
 ;
 
 

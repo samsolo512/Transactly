@@ -9,7 +9,7 @@ select
     ,deal_value
     ,subscription_type
     ,hs_projected_amount as projected_amount
-    ,to_timestamp(hs_lastmodifieddate) as last_modified_date
+    ,to_timestamp(case when notes_last_updated = '' then null else notes_last_updated end) as last_modified_date
 
 from(
 
@@ -26,7 +26,7 @@ from(
             ,'deal_value'
             ,'subscription_type'
             ,'hs_projected_amount'
-            ,'hs_lastmodifieddate'
+            ,'notes_last_updated'
         )
 )
 
@@ -36,7 +36,7 @@ pivot(
         ,'deal_value'
         ,'subscription_type'
         ,'hs_projected_amount'
-        ,'hs_lastmodifieddate'
+        ,'notes_last_updated'
     )
 )
 as p(
@@ -45,5 +45,5 @@ as p(
     ,deal_value
     ,subscription_type
     ,hs_projected_amount
-    ,hs_lastmodifieddate
+    ,notes_last_updated
 )

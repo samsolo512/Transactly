@@ -1,6 +1,6 @@
 --fact_line_item
 
-create or replace table data-sandbox-343520.load.fact_line_item (
+create or replace table business-analytics-337515.data_warehouse.fact_line_item (
     address string
     ,state string
     ,description string

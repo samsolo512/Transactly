@@ -119,11 +119,12 @@ grant usage on integration GCP to role data_engineer;
 
 
 -- step 1: create the integration
+-- create or replace storage integration GCP
 create storage if not exists integration GCP
     type = external_stage
     storage_provider = GCS
     enabled = true
-    storage_allowed_locations = ('gcs://tc_snowflake_exports/exports/')
+    storage_allowed_locations = ('gcs://tc_snowflake_exports/exports/', 'gcs://transactly-sql-dumps/')
 ;
 
 
@@ -155,8 +156,9 @@ create or replace file format csv_format
 
 -- step 4b: create a stage
 create stage if not exists dimensional.GCP_stage
-//create or replace stage dimensional.GCP_stage
-    url = 'gcs://tc_snowflake_exports/exports/'
+-- create or replace stage dimensional.GCP_stage
+--   url = 'gcs://tc_snowflake_exports/exports/'
+    url = 'gcs://transactly-sql-dumps/'
     storage_integration = GCP
     file_format = csv_format
 ;
