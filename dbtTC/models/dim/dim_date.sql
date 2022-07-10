@@ -15,14 +15,19 @@ select
     ,dayofyear(date_id) as day_of_year
 from cte_my_date
 
-union select
-    '19000101' as date_pk
-    ,'1900-01-01' as date_id
-    ,year(to_date('1900-01-01')) as year
-    ,month(to_date('1900-01-01')) as month
-    ,monthname(to_date('1900-01-01')) as month_name
-    ,day(to_date('1900-01-01')) as day_of_mon
-    ,dayofweek(to_date('1900-01-01')) as day_of_week
-    ,weekofyear(to_date('1900-01-01')) as week_of_year
-    ,dayofyear(to_date('1900-01-01')) as day_of_year
+
+-- union select
+--     '19000101' as date_pk
+--     ,'1900-01-01' as date_id
+--     ,year(to_date('1900-01-01')) as year
+--     ,month(to_date('1900-01-01')) as month
+--     ,monthname(to_date('1900-01-01')) as month_name
+--     ,day(to_date('1900-01-01')) as day_of_mon
+--     ,dayofweek(to_date('1900-01-01')) as day_of_week
+--     ,weekofyear(to_date('1900-01-01')) as week_of_year
+--     ,dayofyear(to_date('1900-01-01')) as day_of_year
+
+
+union select '0', '0', null, null, null, null, null, null, null
+
 

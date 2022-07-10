@@ -36,7 +36,7 @@ with
 
 -- 1 row/agent/connection
 select
-    o.agent_id
+    user.user_pk
     ,utvoo.created_date
 from
     src_tc_transaction_transactly_vendor_member_notified ttvmn
@@ -47,5 +47,6 @@ from
     join src_tc_order o
         on t.transaction_id = o.transaction_id
         and o.transaction_id is not null
+    join dim_user user on o.agent_id = user.user_id
     left join src_tc_user_transactly_vendor_opt_out utvoo on utvoo.user_id = o.agent_id
 where tv.vendor_type_id = 10

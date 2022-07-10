@@ -9,9 +9,9 @@ with
         from {{ ref('src_tc_order') }}
     )
 
-    ,dim_agent as(
+    ,dim_user as(
         select *
-        from {{ ref('dim_agent') }}
+        from {{ ref('dim_user') }}
     )
 
     ,dim_transaction as(
@@ -48,10 +48,8 @@ with
     )
 
     select  --2855
-        agent.agent_pk
+        nvl(user.user_pk, (select user_pk from dim_user where user_id = 0)) as user_pk
         ,transaction.transaction_pk
-//        trans.created_by_id as agent_id
-//        ,trans.transaction_id as transaction_id
         ,case when trans.status_id = 3 then 1 else 0 end as closed_flag
         ,case when trans.status_id in (1, 2, 4) then 1 else 0 end as active_flag
         ,case when trans.side_id = 1 then 1 else 0 end as buy_flag
@@ -61,7 +59,7 @@ with
         ,trans.created_date as created_date
     from
         src_tc_transaction trans
-        join dim_agent agent on trans.created_by_id = agent.tc_id
+        left join dim_user user on trans.created_by_id = user.user_id
         join dim_transaction transaction on trans.transaction_id = transaction.transaction_id
         left join diy
             on trans.transaction_id = diy.transaction_id
