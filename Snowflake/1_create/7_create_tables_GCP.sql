@@ -4,6 +4,7 @@ create or replace table business-analytics-337515.data_warehouse.fact_line_item 
     address string
     ,state string
     ,description string
+    ,status string
     ,agent_pays_amt numeric
     ,office_pays_amt numeric
     ,assigned_tc_id string

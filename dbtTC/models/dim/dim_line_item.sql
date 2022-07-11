@@ -22,7 +22,8 @@ select
         else null
         end as tc_paid
     ,l.cancelled_date
+    ,l.created_date
 from
     src_tc_line_item l
 
-union select 0, null, null, null, null, null, null, null, null, null
+union select 0, null, null, null, null, null, null, null, null, null, null

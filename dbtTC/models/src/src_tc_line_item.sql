@@ -8,7 +8,7 @@ select
     l.description
     ,l.status
     ,l.user_id
-    ,cast(l.created as date) as created
+    ,cast(l.created as date) as created_date
     ,cast(l.due_date as date) as due_date
     ,l.order_id
     ,l.id

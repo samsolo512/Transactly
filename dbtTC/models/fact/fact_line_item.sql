@@ -105,7 +105,7 @@ from  --37574
     left join dim_user user on l.user_id = user.user_id
     left join dim_order ord on o.order_id = ord.order_id
     left join dim_user assigned_tc on o.assigned_tc_id = assigned_tc.user_id
-    left join dim_date create_date on cast(l.created as date) = create_date.date_id
+    left join dim_date create_date on cast(l.created_date as date) = create_date.date_id
     left join dim_date due_date on cast(l.due_date as date) = due_date.date_id
     left join dim_date cancel_date on cast(l.cancelled_date as date) = cancel_date.date_id
     left join dim_date closed_date on cast(t.closed_date as date) = closed_date.date_id

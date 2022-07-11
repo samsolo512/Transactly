@@ -12,6 +12,7 @@
                 o.address
                 ,o.state
                 ,line.description
+                ,line.status
                 ,line.agent_pays as agent_pays_amt
                 ,line.office_pays as office_pays_amt
                 ,assigned.user_id as assigned_tc_id
@@ -29,7 +30,7 @@
                 ,user.tier_1 as tier_1_date  -- due date of 5th sale
                 ,user.tier_2 as tier_2_date  -- due date of 1st sale
                 ,user.tier_3 as tier_3_date  -- user created date
-                ,o.created_date
+                ,line.created_date
                 ,line.due_date
                 ,o.closed_date
                 ,line.cancelled_date as cancelled_date

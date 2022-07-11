@@ -17,7 +17,7 @@ select
     ,u.email
     ,u.first_login
     ,cast(u.autopay_date as date) as autopay_date
-    ,cast(u.created as date) as created
+    ,cast(u.created as date) as created_date
     ,u.google_user_id
     ,u.pays_at_title
     ,u.brokerage
