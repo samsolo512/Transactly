@@ -47,7 +47,7 @@ with
             )
     )
 
-    select  --2855
+    select
         nvl(user.user_pk, (select user_pk from dim_user where user_id = 0)) as user_pk
         ,transaction.transaction_pk
         ,case when trans.status_id = 3 then 1 else 0 end as closed_flag

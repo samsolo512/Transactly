@@ -14,4 +14,5 @@ select
     ,cast(t.created as date) as created_date
     ,cast(t.closed_date as date) as closed_date
     ,t.created_by_id
+    ,t.address_id
 from src_tc_transaction t

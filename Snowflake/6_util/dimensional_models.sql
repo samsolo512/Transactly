@@ -1,5 +1,67 @@
 -- dimensional model
 
+
+---------------------------------------------------------------------------------------------------------------
+-- fact_line_item
+-- 1 row/line_item
+
+select
+    *
+from
+    fact_line_item fact
+    join dim_line_item line on fact.line_item_pk = line.line_item_pk
+    join dim_user user on fact.user_pk = user.user_pk
+    join dim_order o on fact.order_pk = o.order_pk
+    join dim_date created_date on fact.created_date_pk = created_date.date_pk
+    join dim_date due_date on fact.due_date_pk = due_date.date_pk
+    join dim_date cancelled_date on fact.created_date_pk = cancelled_date.date_pk
+;
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+-- fact_order
+-- 1 row/order
+
+select
+    fact.*
+from
+    fact_order fact
+    join dim_order o on fact.order_pk = o.order_pk
+    join dim_user u on fact.assigned_tc_pk = u.user_pk
+    left join dim_date closed_date on fact.closed_date_pk = closed_date.date_pk
+;
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+-- fact_transaction
+-- 1 row/transaction
+
+select *
+from
+    fact_transaction fact
+    join dim_transaction t on fact.transaction_pk = t.transaction_pk
+;
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+-- fact_member_connection
+-- 1 row/agent
+
+select *
+from
+    fact_member_connection fact
+    join dim_user u on fact.user_pk = u.user_pk
+;
+
+
+
+
 ---------------------------------------------------------------------------------------------------------------
 -- fact_listing
 -- 1 row/listing
@@ -92,6 +154,8 @@ order by tc_agent_count desc
 ;
 
 
+
+
 ---------------------------------------------------------------------------------------------------------------
 -- fact_TC_diy
 select
@@ -108,6 +172,7 @@ from
 group by dt.year, brokerage.tc_company_name, agent.tc_fullname
 order by row_count desc
 ;
+
 
 
 
@@ -136,33 +201,6 @@ group by dt.year//, agent.tc_id, agent.tc_fullname, brokerage.tc_company_name
 order by revenue desc
 ;
 
-
-
----------------------------------------------------------------------------------------------------------------
--- fact_line_item
-select
-    *
-from
-    fact_line_item fact
-    join dim_line_item line on fact.line_item_pk = line.line_item_pk
-    join dim_client client on fact.client_pk = client.client_pk
-    join dim_date created_date on fact.created_date_pk = created_date.date_pk
-    join dim_date due_date on fact.due_date_pk = due_date.date_pk
-    join dim_date cancelled_date on fact.created_date_pk = cancelled_date.date_pk
-;
-
-
-
----------------------------------------------------------------------------------------------------------------
--- order
-select
-    fact.*
-from
-    fact_order fact
-    join dim_order o on fact.order_pk = o.order_pk
-    join dim_user u on fact.assigned_tc_pk = u.user_pk
-    left join dim_date closed_date on fact.closed_date_pk = closed_date.date_pk
-;
 
 
 
@@ -221,20 +259,6 @@ group by u.full_name, to_varchar(o_created_date.date_id, 'yyyy-MM')
 
 -- select * from dimensional.dim_date;  -- desc table dimensional.dim_date;
 
-
-
----------------------------------------------------------------------------------------------------------------
--- transaction
-
-select
-    o.transaction_created_date
-    ,count(1)
-from
-    fact_transaction fact
-    join dim_transaction_order o on fact.transaction_order_pk = o.transaction_order_pk
-group by o.transaction_created_date
-order by 1 desc
-;
 
 
 

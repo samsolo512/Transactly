@@ -15,4 +15,5 @@ select
     ,o.address
     ,o.state
     ,o.side_id as order_side_id
+    ,o.order_data
 from src_tc_order o

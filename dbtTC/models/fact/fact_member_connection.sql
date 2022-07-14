@@ -34,6 +34,11 @@ with
         from {{ ref('src_tc_transaction') }}
     )
 
+    ,dim_user as(
+        select *
+        from {{ ref('dim_user') }}
+    )
+
 -- 1 row/agent/connection
 select
     user.user_pk
