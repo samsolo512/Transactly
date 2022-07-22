@@ -8,7 +8,6 @@
         copy into @GCP_stage/GCP_fact_line_item
         from(
             select
-                -- status (complete, tc paid)
                 o.address
                 ,o.state
                 ,line.description
@@ -34,21 +33,22 @@
                 ,line.due_date
                 ,o.closed_date
                 ,line.cancelled_date as cancelled_date
-                -- brokerage growth manager/ company id  (prob from Hubspot)
                 ,user.last_order_placed as last_order_placed_date
                 ,user.last_order_due as last_order_due_date
                 ,user.first_order_placed as first_order_placed_date
                 ,user.first_order_closed as first_order_closed_date
                 ,user.fifth_order_closed as fifth_order_closed_date
-            //    ,agent.tc_is_tc_client as tc_client_flag
-
+                ,ofc.office_name
+                ,o.order_status
+                ,to_timestamp(greatest(line.last_sync, o.last_sync)) as last_sync
+                ,user.subscription_level
             from
                 fact_line_item fact
-            //    join dim_agent agent on fact.agent_pk = agent.agent_pk
                 join dim_line_item line on fact.line_item_pk = line.line_item_pk
                 left join dim_user user on fact.user_pk = user.user_pk
                 left join dim_order o on fact.order_pk = o.order_pk
                 left join dim_user assigned on fact.assigned_tc_pk = assigned.user_pk
+                left join dim_office ofc on fact.office_pk = ofc.office_pk
                 left join dim_date line_item_created_date on fact.created_date_pk = line_item_created_date.date_pk
                 left join dim_date line_item_due_date on fact.created_date_pk = line_item_due_date.date_pk
                 left join dim_date line_item_cancelled_date on fact.created_date_pk = line_item_cancelled_date.date_pk

@@ -19,6 +19,11 @@ with
         from {{ ref('src_tc_transaction') }}
     )
 
+    ,src_tc_user_subscription as(
+        select *
+        from {{ ref('src_tc_user_subscription') }}
+    )
+
     ,last_order_placed as (
         select
             l.user_id
@@ -127,6 +132,7 @@ select
     ,fullname
     ,email
     ,brokerage
+    ,subscription_level
     ,pays_at_title
     ,tc_client_flag
     ,max(last_order_placed) as last_order_placed
@@ -145,6 +151,7 @@ from(
         ,u.fullname
         ,u.email
         ,u.brokerage
+        ,sub.subscription_level
         ,case u.pays_at_title
             when 'TRUE' then 'yes'
             when 'FALSE' then 'no'
@@ -169,8 +176,9 @@ from(
         left join fifth_order_closed fifth_c on u.user_id = fifth_c.user_id
         left join first_order_placed fp on u.user_id = fp.user_id
         left join first_order_closed fc on u.user_id = fc.user_id
-    group by u.user_id, u.first_name, u.last_name, u.fullname, u.email, u.brokerage, pays_at_title, tc_client_flag, tier_3, loc.last_order_placed, fp.first_order_placed, fc.first_order_closed, fifth_c.closed_date, fifth.due_date
+        left join src_tc_user_subscription sub on u.user_id = sub.user_id
+    group by u.user_id, u.first_name, u.last_name, u.fullname, u.email, u.brokerage, pays_at_title, tc_client_flag, tier_3, loc.last_order_placed, fp.first_order_placed, fc.first_order_closed, fifth_c.closed_date, fifth.due_date, sub.subscription_level
 )
-group by user_pk, user_id, first_name, last_name, fullname, email, brokerage, pays_at_title, tc_client_flag, tier_3
+group by user_pk, user_id, first_name, last_name, fullname, email, brokerage, pays_at_title, tc_client_flag, tier_3, subscription_level
 
-union select 0, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+union select 0, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null

@@ -20,6 +20,11 @@ with
         from {{ ref('src_tc_line_item')}}
     )
 
+    ,dim_office as(
+        select *
+        from {{ ref('dim_office')}}
+    )
+
     ,dim_order as(
         select *
         from {{ ref('dim_order')}}
@@ -47,12 +52,13 @@ with
 
 select
     -- grain
-    line.line_item_pk
+    nvl(line.line_item_pk, 0) as line_item_pk
 
     -- dims
-    ,user.user_pk
-    ,ord.order_pk
-    ,assigned_tc.user_pk as assigned_tc_pk
+    ,nvl(user.user_pk, 0) as user_pk
+    ,nvl(ord.order_pk, 0) as order_pk
+    ,nvl(assigned_tc.user_pk, 0) as assigned_tc_pk
+    ,nvl(ofc.office_pk, 0) as office_pk
 
     -- dates
     ,nvl(create_date.date_pk, (select date_pk from dim_date where date_id = '0')) as created_date_pk
@@ -97,11 +103,13 @@ select
     ,case when l.description = 'Transaction Coordination Fee' and lower(l.status) not in ('canceled', 'withdrawn', 'cancelled') and l.paid = 1 then l.agent_pays + l.office_pays else 0 end + case when l.description = 'Listing Coordination Fee' and l.paid = 1 then l.agent_pays + l.office_pays else 0 end as agent_paid
     ,case when l.description in ('Applied Credit', 'Applied Discount') and lower(l.status) not in ('canceled', 'withdrawn', 'cancelled') then l.agent_pays else 0 end as discounts_given
 
-from  --37574
+from
     src_tc_transaction t
-    join src_tc_order o on t.transaction_id = o.transaction_id
-    join src_tc_line_item l on o.order_id = l.order_id
-    join dim_line_item line on l.id = line.line_item_id
+    left join src_tc_order o on t.transaction_id = o.transaction_id
+    left join src_tc_line_item l
+        join dim_line_item line on l.id = line.line_item_id
+        on o.order_id = l.order_id
+    left join dim_office ofc on o.agent_office_id = ofc.office_id
     left join dim_user user on l.user_id = user.user_id
     left join dim_order ord on o.order_id = ord.order_id
     left join dim_user assigned_tc on o.assigned_tc_id = assigned_tc.user_id

@@ -31,4 +31,8 @@ create or replace table business-analytics-337515.data_warehouse.fact_line_item 
     ,first_order_placed_date date
     ,first_order_closed_date date
     ,fifth_order_closed_date date
+    ,office_name string
+    ,order_status string
+    ,last_sync datetime
+    ,subscription_level string
 )

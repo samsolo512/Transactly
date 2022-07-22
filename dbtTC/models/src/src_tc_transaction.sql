@@ -15,4 +15,5 @@ select
     ,cast(t.closed_date as date) as closed_date
     ,t.created_by_id
     ,t.address_id
+    ,t.expiration_date
 from src_tc_transaction t

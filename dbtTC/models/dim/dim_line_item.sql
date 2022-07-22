@@ -1,6 +1,6 @@
 with src_tc_line_item as (
     select *
-    from {{ ref('src_tc_line_item')}}
+    from {{ ref('src_tc_line_item') }}
 )
 
 select
@@ -23,7 +23,8 @@ select
         end as tc_paid
     ,l.cancelled_date
     ,l.created_date
+    ,l.last_sync
 from
     src_tc_line_item l
 
-union select 0, null, null, null, null, null, null, null, null, null, null
+union select 0, 0, null, null, null, null, null, null, null, null, null, null
